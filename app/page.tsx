@@ -40,7 +40,8 @@ export default function Home() {
       <aside style={{ width: 320, background: '#fff', borderRight: '1px solid #e5e7eb', minHeight: '100vh', padding: '40px 32px 32px 32px', display: 'flex', flexDirection: 'column', gap: 32, boxShadow: '2px 0 8px rgba(0,0,0,0.04)', color: '#000' }}>
         <div>
           <h1 style={{ fontSize: 22, fontWeight: 700, marginBottom: 16, color: '#000' }}>Property Link Submission</h1>
-          <Link href="/calculator" style={{ color: '#0070f3', fontWeight: 500, fontSize: 15, textDecoration: 'underline' }}>Calculator</Link>
+          <Link href="/calculator" style={{ color: '#0070f3', fontWeight: 500, fontSize: 15, textDecoration: 'underline', display: 'block', marginBottom: 8 }}>Calculator</Link>
+          <Link href="/checklist" style={{ color: '#0070f3', fontWeight: 500, fontSize: 15, textDecoration: 'underline', display: 'block' }}>Checklist</Link>
         </div>
         <div>
           <h2 style={{ fontSize: 16, fontWeight: 600, marginBottom: 8, color: '#000' }}>Instructions</h2>
