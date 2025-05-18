@@ -117,7 +117,7 @@ export default function Calculator() {
       const annualNetProfit = annualRent - annualExpenses;
     const monthlyNetProfit = annualNetProfit / 12;
     const monthlyExpenses = (annualExpenses - insuranceNum) / 12;
-    // Basic annual ROI
+    // TODO fix the ROI calculation
     const roi = totalInvestment ? (annualNetProfit / totalInvestment) * 100 : 0;
 
     // Extended ROI: Include 5-year capital gain
