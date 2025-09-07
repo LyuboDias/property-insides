@@ -25,6 +25,7 @@ export default function NavigationBar({ currentPage, pageIcon }: NavigationBarPr
     { href: '/', label: 'Home', icon: '🏠' },
     { href: '/calculator', label: 'Calculator', icon: '🧮' },
     { href: '/property-search', label: 'Property Search', icon: '🔍' },
+    { href: '/developer-tools', label: 'Developer Tools', icon: '🏗️' },
     { href: '/checklist', label: 'Checklist', icon: '📋' }
   ]
 
