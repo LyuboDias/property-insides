@@ -294,6 +294,49 @@ export default function Calculator() {
     setResults(resultsData);
   };
 
+  // Average house prices by region and number of bedrooms
+  const getAveragePrices = (bedrooms: number) => {
+    const priceData: { [key: number]: { [region: string]: number } } = {
+      1: {
+        "North East": 85000,
+        "Midlands": 120000,
+        "North West": 110000,
+        "South East": 280000,
+        "London": 450000
+      },
+      2: {
+        "North East": 125000,
+        "Midlands": 165000,
+        "North West": 145000,
+        "South East": 380000,
+        "London": 620000
+      },
+      3: {
+        "North East": 155000,
+        "Midlands": 195000,
+        "North West": 175000,
+        "South East": 485000,
+        "London": 785000
+      },
+      4: {
+        "North East": 225000,
+        "Midlands": 285000,
+        "North West": 255000,
+        "South East": 685000,
+        "London": 1150000
+      },
+      5: {
+        "North East": 320000,
+        "Midlands": 385000,
+        "North West": 345000,
+        "South East": 925000,
+        "London": 1650000
+      }
+    };
+
+    return priceData[bedrooms] || priceData[2]; // Default to 2 bedrooms if not found
+  };
+
   // Download results as CSV
   const handleDownload = () => {
     if (!results) return;
@@ -368,6 +411,16 @@ export default function Calculator() {
           .sidebar { display: none !important; }
           .main-content { padding: 16px 12px !important; padding-top: 80px !important; width: 100% !important; }
           .mobile-header { display: block !important; }
+        }
+        
+        .tooltip-container:hover .tooltip {
+          opacity: 1 !important;
+          visibility: visible !important;
+        }
+        
+        .tooltip-icon:hover {
+          background-color: rgba(102,126,234,0.15) !important;
+          transform: scale(1.05);
         }
       `}</style>
       
@@ -619,7 +672,77 @@ export default function Calculator() {
             </h3>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 20 }}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                <label style={{ fontWeight: 500, marginBottom: 2, fontSize: 13, color: '#000' }}>Purchase price <span style={{ color: 'red' }}>*</span></label>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <label style={{ fontWeight: 500, marginBottom: 2, fontSize: 13, color: '#000' }}>Purchase price <span style={{ color: 'red' }}>*</span></label>
+                  <div className="tooltip-container" style={{ 
+                    position: 'relative', 
+                    display: 'inline-block',
+                    cursor: 'help'
+                  }}>
+                    <span className="tooltip-icon" style={{
+                      fontSize: 12,
+                      color: '#667eea',
+                      fontWeight: 600,
+                      backgroundColor: 'rgba(102,126,234,0.1)',
+                      borderRadius: '50%',
+                      width: 16,
+                      height: 16,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      border: '1px solid rgba(102,126,234,0.2)',
+                      transition: 'all 0.2s ease'
+                    }}>ℹ</span>
+                    <div style={{
+                      position: 'absolute',
+                      bottom: '125%',
+                      left: '50%',
+                      transform: 'translateX(-50%)',
+                      backgroundColor: '#1a202c',
+                      color: 'white',
+                      padding: '12px 16px',
+                      borderRadius: 8,
+                      fontSize: 11,
+                      fontWeight: 500,
+                      whiteSpace: 'normal',
+                      opacity: 0,
+                      visibility: 'hidden',
+                      transition: 'opacity 0.2s, visibility 0.2s',
+                      zIndex: 1000,
+                      boxShadow: '0 8px 25px rgba(0,0,0,0.15)',
+                      pointerEvents: 'none',
+                      minWidth: 200
+                    }}
+                    className="tooltip"
+                    >
+                      <div style={{ marginBottom: 8, fontWeight: 600, color: '#667eea', fontSize: 12 }}>
+                        Average {numBeds || 2}-bed prices:
+                      </div>
+                      {Object.entries(getAveragePrices(Number(numBeds) || 2)).map(([region, price]) => (
+                        <div key={region} style={{ 
+                          display: 'flex', 
+                          justifyContent: 'space-between',
+                          marginBottom: 3,
+                          gap: 12
+                        }}>
+                          <span style={{ color: '#cbd5e0' }}>{region}:</span>
+                          <span style={{ fontWeight: 600, color: '#48bb78' }}>£{price.toLocaleString()}</span>
+                        </div>
+                      ))}
+                      <div style={{
+                        position: 'absolute',
+                        top: '100%',
+                        left: '50%',
+                        transform: 'translateX(-50%)',
+                        width: 0,
+                        height: 0,
+                        borderLeft: '6px solid transparent',
+                        borderRight: '6px solid transparent',
+                        borderTop: '6px solid #1a202c'
+                      }}></div>
+                    </div>
+                  </div>
+                </div>
                 <input type="number" value={purchase} onChange={e => setPurchase(e.target.value)} style={inputStyle} required />
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
