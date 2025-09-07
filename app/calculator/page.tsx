@@ -4,9 +4,12 @@ import { useState } from "react";
 
 const toCurrency = (n: number | undefined | null) =>
   typeof n === "number" && !isNaN(n)
-    ? `£${n.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
-    : "£0.00";
-const toPercent = (n: number) => `${(n * 100).toFixed(2)}%`;
+    ? `£${n.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`
+    : "£0";
+const toPercent = (n: number) => {
+  const percentage = n * 100;
+  return percentage % 1 === 0 ? `${percentage}%` : `${percentage.toFixed(1)}%`;
+};
 
 // SDLT calculation for LTD/second home (England, buy-to-let)
 function calculateStampDuty(purchasePrice: number): number {
@@ -34,7 +37,7 @@ export default function Calculator() {
   // Inputs as strings to avoid leading zero
   const [address, setAddress] = useState("");
   const [postCode, setPostCode] = useState("");
-  const [cash, setCash] = useState("");
+  const [cash, setCash] = useState("30000");
   const [purchase, setPurchase] = useState("");
   const [repair, setRepair] = useState("");
   const [rent, setRent] = useState("");
@@ -59,7 +62,6 @@ export default function Calculator() {
   const [insurance, setInsurance] = useState("350");
   const [growth, setGrowth] = useState("7");
   const [tenure, setTenure] = useState("");
-  const [propertyImages, setPropertyImages] = useState<string[]>([]);
   const [propertyLink, setPropertyLink] = useState("");
   const [linkLoading, setLinkLoading] = useState(false);
   const [linkError, setLinkError] = useState("");
@@ -132,15 +134,6 @@ export default function Calculator() {
         setTenure(property.Tenure);
       }
 
-      console.log('Property Images from API:', property.Images);
-      if (property.Images && Array.isArray(property.Images) && property.Images.length > 0) {
-        console.log('Setting property images:', property.Images.length, 'images');
-        setPropertyImages(property.Images);
-      } else {
-        console.log('No property images found or invalid format');
-        setPropertyImages([]);
-      }
-
       // Set the link field to the scraped URL
       setLink(propertyLink);
 
@@ -200,6 +193,18 @@ export default function Calculator() {
     const growthRate = Number(growth) ? Number(growth) / 100 : 0;
     const valueAfter2Years = currentValue * Math.pow(1 + growthRate, 2);
     const valueAfter5Years = currentValue * Math.pow(1 + growthRate, 5);
+    const valueAfter10Years = currentValue * Math.pow(1 + growthRate, 10);
+    const valueAfter20Years = currentValue * Math.pow(1 + growthRate, 20);
+    
+    console.log('Debug Future Projections:', {
+      currentValue,
+      growthRate,
+      growth,
+      valueAfter2Years,
+      valueAfter5Years,
+      valueAfter10Years,
+      valueAfter20Years
+    });
     const annualRent = rentNum * 12;
     const annualExpenses =
       (mortgageInterest * 12) +
@@ -208,14 +213,34 @@ export default function Calculator() {
       insuranceNum; // Already an annual value
       const annualNetProfit = annualRent - annualExpenses;
     const monthlyNetProfit = annualNetProfit / 12;
-    const monthlyExpenses = (annualExpenses - insuranceNum) / 12;
+    const monthlyExpenses = annualExpenses / 12;
     // TODO fix the ROI calculation
     const roi = totalInvestment ? (annualNetProfit / totalInvestment) * 100 : 0;
 
-    // Extended ROI: Include 5-year capital gain
-    const capitalGain = valueAfter5Years - purchaseNum;
-    const totalProfit5Years = (annualNetProfit * 5) + capitalGain;
+    // Extended ROI: Include capital gains for multiple periods
+    const capitalGain5Year = valueAfter5Years - purchaseNum;
+    const capitalGain10Year = valueAfter10Years - purchaseNum;
+    const capitalGain20Year = valueAfter20Years - purchaseNum;
+    
+    const totalProfit5Years = (annualNetProfit * 5) + capitalGain5Year;
+    const totalProfit10Years = (annualNetProfit * 10) + capitalGain10Year;
+    const totalProfit20Years = (annualNetProfit * 20) + capitalGain20Year;
+    
     const roi5Year = totalInvestment ? (totalProfit5Years / totalInvestment) * 100 : 0;
+    const roi10Year = totalInvestment ? (totalProfit10Years / totalInvestment) * 100 : 0;
+    const roi20Year = totalInvestment ? (totalProfit20Years / totalInvestment) * 100 : 0;
+    
+    console.log('Debug Capital Gains & ROI:', {
+      purchaseNum,
+      capitalGain5Year,
+      capitalGain10Year, 
+      capitalGain20Year,
+      annualNetProfit,
+      totalInvestment,
+      roi5Year,
+      roi10Year,
+      roi20Year
+    });
 
     // const roi = totalInvestment ? (annualNetProfit / totalInvestment) * 100 : 0;
     const yieldValue = purchaseNum ? annualRent / purchaseNum : 0;
@@ -241,7 +266,11 @@ export default function Calculator() {
       profit: rentNum - mortgageInterest - expenses,
       roi,
       roi5Year,
-      capitalGain,
+      roi10Year,
+      roi20Year,
+      capitalGain5Year,
+      capitalGain10Year,
+      capitalGain20Year,
       yieldValue,
       grossYield,
       netYield,
@@ -249,13 +278,14 @@ export default function Calculator() {
       link,
       numBeds,
       tenure,
-      propertyImages,
       soldDate,
       soldPrice,
       comment,
       insurance,
       valueAfter2Years,
       valueAfter5Years,
+      valueAfter10Years,
+      valueAfter20Years,
       growth,
       mortgageType,
       annualExpenses,
@@ -281,7 +311,7 @@ export default function Calculator() {
       ["Tenure", results.tenure],
       ["Sold date", results.soldDate],
       ["Sold price", results.soldPrice],
-      ["Insurance", results.insurance],
+      ["Insurance (p/y)", results.insurance],
       ["Comment/notes", results.comment],
       ['Stamp duty (SDLT with second home)', results.stampDuty],
       ['Deposit', results.deposit],
@@ -300,10 +330,18 @@ export default function Calculator() {
       ['Profit per month', results.monthlyNetProfit],
       ['ROI', results.roi],
       ['Yield', results.yieldValue],
-      ['Gross yield (%)', results.grossYield.toFixed(2) + '%'],
-      ['Net yield (%)', results.netYield.toFixed(2) + '%'],
+      ['Gross yield (%)', results.grossYield % 1 === 0 ? `${results.grossYield}%` : `${results.grossYield.toFixed(1)}%`],
+      ['Net yield (%)', results.netYield % 1 === 0 ? `${results.netYield}%` : `${results.netYield.toFixed(1)}%`],
       ['Estimated value after 2 years', results.valueAfter2Years],
       ['Estimated value after 5 years', results.valueAfter5Years],
+      ['Estimated value after 10 years', results.valueAfter10Years],
+      ['Estimated value after 20 years', results.valueAfter20Years],
+      ['5-Year Capital Gain', results.capitalGain5Year],
+      ['10-Year Capital Gain', results.capitalGain10Year],
+      ['20-Year Capital Gain', results.capitalGain20Year],
+      ['5-Year ROI (%)', results.roi5Year],
+      ['10-Year ROI (%)', results.roi10Year],
+      ['20-Year ROI (%)', results.roi20Year],
     ];
     csv += rows.map(([k, v]) => `"${k}","${typeof v === 'number' ? v : ''}"`).join('\n');
     const blob = new Blob([csv], { type: 'text/csv' });
@@ -452,7 +490,7 @@ export default function Calculator() {
             <input type="number" value={mortgageFees} onChange={e => setMortgageFees(e.target.value)} style={inputStyle} />
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-            <label style={{ fontWeight: 500, marginBottom: 2, fontSize: 13, color: '#000' }}>Insurance</label>
+            <label style={{ fontWeight: 500, marginBottom: 2, fontSize: 13, color: '#000' }}>Insurance (p/y)</label>
             <input type="number" value={insurance} onChange={e => setInsurance(e.target.value)} style={inputStyle} />
           </div>
 
@@ -516,7 +554,7 @@ export default function Calculator() {
             <button type="submit" style={buttonStyle}>Calculate</button>
           </div>
         </form>
-{results && (
+        {results && (
           <div style={{ width: '100%', maxWidth: 1200, display: 'flex', flexDirection: 'column', gap: 32 }}>
 
             {/* Warning Alert */}
@@ -535,14 +573,13 @@ export default function Calculator() {
             )}
             {/* Modern Cards Layout */}
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 24 }}>
-
               {/* Property Details Card */}
               <div style={{ background: '#fff', borderRadius: 16, padding: 24, boxShadow: '0 8px 32px rgba(0,0,0,0.08)', border: '1px solid rgba(0,0,0,0.05)' }}>
                 <h3 style={{ color: '#1a202c', fontSize: 18, fontWeight: 700, margin: 0, marginBottom: 20, display: 'flex', alignItems: 'center', gap: 8 }}>
                   🏠 Property Details
                 </h3>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-                  {results.dateAdded && (
+                {results.dateAdded && (
                     <>
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                         <span style={{ color: '#4a5568', fontWeight: 500 }}>Date Added</span>
@@ -565,8 +602,8 @@ export default function Calculator() {
                       <span style={{ color: '#4a5568', fontWeight: 500 }}>Tenure</span>
                       <span style={{ fontWeight: 600, color: '#1a202c' }}>{results.tenure}</span>
                     </div>
-                  )}
-                  {results.link && (
+                )}
+                {results.link && (
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                       <span style={{ color: '#4a5568', fontWeight: 500 }}>RightMove Link</span>
                       <a href={results.link} target="_blank" rel="noopener noreferrer" style={{ color: '#0070f3', textDecoration: 'none', fontWeight: 600 }}>
@@ -643,8 +680,8 @@ export default function Calculator() {
                   </div>
                   {results.insurance && (
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <span style={{ color: '#ef4444', fontWeight: 500 }}>Insurance</span>
-                      <span style={{ fontWeight: 600, color: '#ef4444' }}>-{toCurrency(Number(results.insurance))}</span>
+                      <span style={{ color: '#ef4444', fontWeight: 500 }}>Insurance (p/m)</span>
+                      <span style={{ fontWeight: 600, color: '#ef4444' }}>-{toCurrency(Number(results.insurance) / 12)}</span>
                     </div>
                   )}
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -678,7 +715,9 @@ export default function Calculator() {
                   <div>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
                       <span style={{ color: '#4a5568', fontWeight: 500 }}>Gross Yield</span>
-                      <span style={{ fontWeight: 700, color: '#667eea', fontSize: 16 }}>{results.grossYield.toFixed(2)}%</span>
+                      <span style={{ fontWeight: 700, color: '#667eea', fontSize: 16 }}>
+                        {results.grossYield % 1 === 0 ? `${results.grossYield}%` : `${results.grossYield.toFixed(1)}%`}
+                      </span>
                     </div>
                     <div style={{ background: '#f1f5f9', borderRadius: 8, height: 6, overflow: 'hidden' }}>
                       <div style={{ 
@@ -693,7 +732,9 @@ export default function Calculator() {
                   <div>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
                       <span style={{ color: '#4a5568', fontWeight: 500 }}>Net Yield</span>
-                      <span style={{ fontWeight: 700, color: '#8b5cf6', fontSize: 16 }}>{results.netYield.toFixed(2)}%</span>
+                      <span style={{ fontWeight: 700, color: '#8b5cf6', fontSize: 16 }}>
+                        {results.netYield % 1 === 0 ? `${results.netYield}%` : `${results.netYield.toFixed(1)}%`}
+                      </span>
                     </div>
                     <div style={{ background: '#f1f5f9', borderRadius: 8, height: 6, overflow: 'hidden' }}>
                       <div style={{ 
@@ -752,15 +793,50 @@ export default function Calculator() {
                     <span style={{ fontWeight: 700, fontSize: 16 }}>{toCurrency(results.valueAfter5Years)}</span>
                   </div>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <span style={{ fontWeight: 500, opacity: 0.9 }}>10-Year Value</span>
+                    <span style={{ fontWeight: 700, fontSize: 16 }}>{toCurrency(results.valueAfter10Years)}</span>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <span style={{ fontWeight: 500, opacity: 0.9 }}>20-Year Value</span>
+                    <span style={{ fontWeight: 700, fontSize: 16 }}>{toCurrency(results.valueAfter20Years)}</span>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <span style={{ fontWeight: 500, opacity: 0.9 }}>5-Year Capital Gain</span>
-                    <span style={{ fontWeight: 700, fontSize: 18, color: '#fbbf24' }}>
-                      {typeof results.capitalGain === 'number' ? '£' + results.capitalGain.toLocaleString(undefined, { maximumFractionDigits: 2 }) : ''}
+                    <span style={{ fontWeight: 700, fontSize: 16, color: '#fbbf24' }}>
+                      {typeof results.capitalGain5Year === 'number' ? '£' + results.capitalGain5Year.toLocaleString(undefined, { maximumFractionDigits: 0 }) : ''}
+                    </span>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <span style={{ fontWeight: 500, opacity: 0.9 }}>10-Year Capital Gain</span>
+                    <span style={{ fontWeight: 700, fontSize: 16, color: '#fbbf24' }}>
+                      {typeof results.capitalGain10Year === 'number' ? '£' + results.capitalGain10Year.toLocaleString(undefined, { maximumFractionDigits: 0 }) : ''}
+                    </span>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <span style={{ fontWeight: 500, opacity: 0.9 }}>20-Year Capital Gain</span>
+                    <span style={{ fontWeight: 700, fontSize: 16, color: '#fbbf24' }}>
+                      {typeof results.capitalGain20Year === 'number' ? '£' + results.capitalGain20Year.toLocaleString(undefined, { maximumFractionDigits: 0 }) : ''}
                     </span>
                   </div>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <span style={{ fontWeight: 500, opacity: 0.9 }}>5-Year ROI</span>
-                    <span style={{ fontWeight: 700, fontSize: 18, color: '#34d399' }}>
-                      {typeof results.roi5Year === 'number' ? results.roi5Year.toFixed(2) + '%' : ''}
+                    <span style={{ fontWeight: 700, fontSize: 16, color: '#34d399' }}>
+                      {typeof results.roi5Year === 'number' ? 
+                        (results.roi5Year % 1 === 0 ? `${results.roi5Year}%` : `${results.roi5Year.toFixed(1)}%`) : ''}
+                    </span>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <span style={{ fontWeight: 500, opacity: 0.9 }}>10-Year ROI</span>
+                    <span style={{ fontWeight: 700, fontSize: 16, color: '#34d399' }}>
+                      {typeof results.roi10Year === 'number' ? 
+                        (results.roi10Year % 1 === 0 ? `${results.roi10Year}%` : `${results.roi10Year.toFixed(1)}%`) : ''}
+                    </span>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <span style={{ fontWeight: 500, opacity: 0.9 }}>20-Year ROI</span>
+                    <span style={{ fontWeight: 700, fontSize: 16, color: '#34d399' }}>
+                      {typeof results.roi20Year === 'number' ? 
+                        (results.roi20Year % 1 === 0 ? `${results.roi20Year}%` : `${results.roi20Year.toFixed(1)}%`) : ''}
                     </span>
                   </div>
                 </div>
@@ -773,19 +849,19 @@ export default function Calculator() {
                     📝 Additional Details
                   </h3>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-                    {results.soldDate && (
+                {results.soldDate && (
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                         <span style={{ color: '#4a5568', fontWeight: 500 }}>Sold Date</span>
                         <span style={{ fontWeight: 600, color: '#1a202c' }}>{results.soldDate}</span>
                       </div>
-                    )}
-                    {results.soldPrice && (
+                )}
+                {results.soldPrice && (
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                         <span style={{ color: '#4a5568', fontWeight: 500 }}>Sold Price</span>
                         <span style={{ fontWeight: 600, color: '#1a202c' }}>{toCurrency(Number(results.soldPrice))}</span>
                       </div>
-                    )}
-                    {results.comment && (
+                )}
+                {results.comment && (
                       <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                         <span style={{ color: '#4a5568', fontWeight: 500 }}>Comments/Notes</span>
                         <div style={{ background: '#f8fafc', padding: 12, borderRadius: 8, color: '#1a202c', fontSize: 14, lineHeight: 1.5 }}>
