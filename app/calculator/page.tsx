@@ -207,18 +207,16 @@ export default function Calculator() {
     // TODO fix the ROI calculation
     const roi = totalInvestment ? (annualNetProfit / totalInvestment) * 100 : 0;
 
-    // Extended ROI: Include capital gains for multiple periods
+    // Capital gains for multiple periods
     const capitalGain5Year = valueAfter5Years - purchaseNum;
     const capitalGain10Year = valueAfter10Years - purchaseNum;
     const capitalGain20Year = valueAfter20Years - purchaseNum;
     
-    const totalProfit5Years = (annualNetProfit * 5) + capitalGain5Year;
-    const totalProfit10Years = (annualNetProfit * 10) + capitalGain10Year;
-    const totalProfit20Years = (annualNetProfit * 20) + capitalGain20Year;
-    
-    const roi5Year = totalInvestment ? (totalProfit5Years / totalInvestment) * 100 : 0;
-    const roi10Year = totalInvestment ? (totalProfit10Years / totalInvestment) * 100 : 0;
-    const roi20Year = totalInvestment ? (totalProfit20Years / totalInvestment) * 100 : 0;
+    // Property Appreciation ROI: (Final Value - Initial Value) / Initial Value × 100
+    // This shows the percentage growth in property value only
+    const roi5Year = purchaseNum ? (capitalGain5Year / purchaseNum) * 100 : 0;
+    const roi10Year = purchaseNum ? (capitalGain10Year / purchaseNum) * 100 : 0;
+    const roi20Year = purchaseNum ? (capitalGain20Year / purchaseNum) * 100 : 0;
 
     // const roi = totalInvestment ? (annualNetProfit / totalInvestment) * 100 : 0;
     const yieldValue = purchaseNum ? annualRent / purchaseNum : 0;
@@ -308,6 +306,7 @@ export default function Calculator() {
       ['Additional monthly fees', results.additionalFees],
       ['Expenses (per month, estimated)', results.monthlyExpenses],
       ['Profit per month', results.monthlyNetProfit],
+      ['Net yearly rental profit', results.annualNetProfit],
       ['ROI', results.roi],
       ['Yield', results.yieldValue],
       ['Gross yield (%)', results.grossYield % 1 === 0 ? `${results.grossYield}%` : `${results.grossYield.toFixed(1)}%`],
@@ -319,9 +318,9 @@ export default function Calculator() {
       ['5-Year Capital Gain', results.capitalGain5Year],
       ['10-Year Capital Gain', results.capitalGain10Year],
       ['20-Year Capital Gain', results.capitalGain20Year],
-      ['5-Year ROI (%)', results.roi5Year],
-      ['10-Year ROI (%)', results.roi10Year],
-      ['20-Year ROI (%)', results.roi20Year],
+      ['5-Year Property ROI (%)', results.roi5Year],
+      ['10-Year Property ROI (%)', results.roi10Year],
+      ['20-Year Property ROI (%)', results.roi20Year],
     ];
     csv += rows.map(([k, v]) => `"${k}","${typeof v === 'number' ? v : ''}"`).join('\n');
     const blob = new Blob([csv], { type: 'text/csv' });
@@ -683,6 +682,15 @@ export default function Calculator() {
                       {results.monthlyNetProfit >= 0 ? '+' : ''}{toCurrency(results.monthlyNetProfit)}
                     </span>
                   </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <span style={{ color: '#4a5568', fontWeight: 500 }}>Net yearly rental profit</span>
+                    <span style={{ 
+                      fontWeight: 600, 
+                      color: results.annualNetProfit >= 0 ? '#22c55e' : '#ef4444' 
+                    }}>
+                      {results.annualNetProfit >= 0 ? '+' : ''}{toCurrency(results.annualNetProfit)}
+                    </span>
+                  </div>
                 </div>
               </div>
 
@@ -799,21 +807,21 @@ export default function Calculator() {
                     </span>
                   </div>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <span style={{ fontWeight: 500, opacity: 0.9 }}>5-Year ROI</span>
+                    <span style={{ fontWeight: 500, opacity: 0.9 }}>5-Year Property ROI</span>
                     <span style={{ fontWeight: 700, fontSize: 16, color: '#34d399' }}>
                       {typeof results.roi5Year === 'number' ? 
                         (results.roi5Year % 1 === 0 ? `${results.roi5Year}%` : `${results.roi5Year.toFixed(1)}%`) : ''}
                     </span>
                   </div>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <span style={{ fontWeight: 500, opacity: 0.9 }}>10-Year ROI</span>
+                    <span style={{ fontWeight: 500, opacity: 0.9 }}>10-Year Property ROI</span>
                     <span style={{ fontWeight: 700, fontSize: 16, color: '#34d399' }}>
                       {typeof results.roi10Year === 'number' ? 
                         (results.roi10Year % 1 === 0 ? `${results.roi10Year}%` : `${results.roi10Year.toFixed(1)}%`) : ''}
                     </span>
                   </div>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <span style={{ fontWeight: 500, opacity: 0.9 }}>20-Year ROI</span>
+                    <span style={{ fontWeight: 500, opacity: 0.9 }}>20-Year Property ROI</span>
                     <span style={{ fontWeight: 700, fontSize: 16, color: '#34d399' }}>
                       {typeof results.roi20Year === 'number' ? 
                         (results.roi20Year % 1 === 0 ? `${results.roi20Year}%` : `${results.roi20Year.toFixed(1)}%`) : ''}
