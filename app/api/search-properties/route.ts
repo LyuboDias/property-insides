@@ -252,6 +252,16 @@ function buildRightMoveFindUrl(params: PropertySearchParams, locationData: {iden
   return finalUrl;
 }
 
+// Helper function to check if a title is invalid (image count, too short, etc.)
+function isInvalidTitle(text: string): boolean {
+  if (!text || text.length < 5) return true;
+  // Check for image counts like "1/14", "|1/14", "1 / 14"
+  if (text.match(/^[\|\s]*\d+\s*\/\s*\d+[\|\s]*$/)) return true;
+  // Check for single numbers or very short text
+  if (text.match(/^\d+$/) || text.length <= 2) return true;
+  return false;
+}
+
 /**
  * Extracts property listings from RightMove search results HTML
  */
@@ -344,47 +354,72 @@ function extractPropertiesFromHtml(html: string, offset: number = 0, limit: numb
         '.propertyCard-priceValue span'
       ]) || extractPriceFromText($container.text());
       
-      // Extract property title/address using RightMove's specific structure
-      let title = extractText($container, [
-        // RightMove specific selectors for property title
-        'h1._2uQQ3SV0eMHL1P6t5ZDo2q', // Exact RightMove class for street address
-        'h1[itemprop="streetAddress"]', // Schema.org property
-        '.h3U6cGyEUf76tvCpYisik h1', // Parent container + h1
-        '[itemprop="address"] h1', // Address container with h1
-        'h1._2uQQ3SV0eMHL1P6t5ZDo2q', // RightMove title class
-        
-        // Fallback selectors
-        'h1',
-        'h2', 
-        '.property-title',
-        '.propertyCard-title',
-        '.propertyCard-address',
-        'a[href*="/properties/"]' // Property links often contain the title
-      ]);
+      // Extract title/address with enhanced logic targeting RightMove schema.org structure
+      let title = '';
       
-      // If title is empty or looks like image count, try extracting from link text
-      if (!title || title.match(/^\d+\/\d+$/) || title.length < 5) {
-        const linkText = $container.find('a[href*="/properties/"]').first().text().trim();
-        if (linkText && !linkText.match(/^\d+\/\d+$/) && linkText.length > 5) {
-          title = linkText;
-        }
-        
-        // Additional fallback: try to find the address structure anywhere in the container
-        const addressContainer = $container.find('.h3U6cGyEUf76tvCpYisik, [itemprop="address"]').first();
-        if (addressContainer.length > 0) {
-          const addressTitle = addressContainer.find('h1, [itemprop="streetAddress"]').first().text().trim();
-          if (addressTitle && addressTitle.length > 5) {
-            title = addressTitle;
+      // First, try to find the specific RightMove address structure
+      // <div class="h3U6cGyEUf76tvCpYisik" itemscope="" itemprop="address">
+      //   <h1 class="_2uQQ3SV0eMHL1P6t5ZDo2q" itemprop="streetAddress">Address</h1>
+      // </div>
+      const addressContainer = $container.find('.h3U6cGyEUf76tvCpYisik[itemprop="address"], [itemprop="address"].h3U6cGyEUf76tvCpYisik, [itemprop="address"]').first();
+      if (addressContainer.length > 0) {
+        const streetAddressElement = addressContainer.find('h1[itemprop="streetAddress"], h1._2uQQ3SV0eMHL1P6t5ZDo2q').first();
+        if (streetAddressElement.length > 0) {
+          const extractedTitle = streetAddressElement.text().trim();
+          if (!isInvalidTitle(extractedTitle)) {
+            title = extractedTitle;
+            console.log('Found address from schema.org structure:', title);
           }
         }
-        
-        // Manual search for RightMove address pattern in HTML
+      }
+      
+      // If not found, try individual selectors in priority order
+      if (!title || isInvalidTitle(title)) {
+        title = extractText($container, [
+          'h1[itemprop="streetAddress"]', // Schema.org street address
+          'h1._2uQQ3SV0eMHL1P6t5ZDo2q', // RightMove specific class
+          '.h3U6cGyEUf76tvCpYisik h1', // Container + h1
+          '[itemprop="address"] h1', // Address container with h1
+          
+          // Fallback selectors
+          'h1',
+          'h2', 
+          '.property-title',
+          '.propertyCard-title',
+          '.propertyCard-address'
+        ]);
+      }
+      
+      // If title is still invalid, try extracting from clean link text
+      if (!title || isInvalidTitle(title)) {
+        const linkElement = $container.find('a[href*="/properties/"]').first();
+        if (linkElement.length > 0) {
+          const linkText = linkElement.text().trim();
+          // Split by price pattern and take the part after the price (address usually follows price)
+          const priceMatch = linkText.match(/(.*?)£[\d,]+(.*)$/);
+          if (priceMatch && priceMatch[2]) {
+            const addressPart = priceMatch[2].trim();
+            if (addressPart && !isInvalidTitle(addressPart)) {
+              title = addressPart;
+              console.log('Extracted address from link text after price:', title);
+            }
+          } else if (linkText && !isInvalidTitle(linkText)) {
+            title = linkText;
+          }
+        }
+      }
+      
+      // Final fallback: Manual search for RightMove address pattern in HTML
+      if (!title || isInvalidTitle(title)) {
         const containerHtml = $container.html() || '';
-        if (!title && containerHtml.includes('itemprop="address"')) {
-          const addressMatch = containerHtml.match(/<h1[^>]*itemprop="streetAddress"[^>]*>([^<]+)<\/h1>/i);
+        if (containerHtml.includes('itemprop="streetAddress"') || containerHtml.includes('_2uQQ3SV0eMHL1P6t5ZDo2q')) {
+          const addressMatch = containerHtml.match(/<h1[^>]*(?:itemprop="streetAddress"|class="[^"]*_2uQQ3SV0eMHL1P6t5ZDo2q[^"]*")[^>]*>([^<]+)<\/h1>/i);
           if (addressMatch && addressMatch[1]) {
-            title = addressMatch[1].trim();
-            console.log('Found address via HTML regex:', title);
+            const extractedTitle = addressMatch[1].trim();
+            if (!isInvalidTitle(extractedTitle)) {
+              title = extractedTitle;
+              console.log('Found address via HTML regex:', title);
+            }
           }
         }
       }
