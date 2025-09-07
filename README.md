@@ -1,6 +1,6 @@
 # Property Insides
 
-A comprehensive property investment analysis tool designed for UK property investors. This application helps property investors analyze buy-to-let deals, scrape property data from RightMove, and systematically evaluate properties using a comprehensive viewing checklist.
+A comprehensive property investment analysis tool designed for UK property investors. This application helps property investors analyze buy-to-let deals, scrape property data from RightMove, and systematically evaluate properties using a comprehensive viewing checklist
 
 ## Features
 
