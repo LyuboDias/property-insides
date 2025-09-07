@@ -173,7 +173,7 @@ export default function Calculator() {
     const totalInvestment = deposit + repairNum + legalNum + mortgageFeesNum + stampDuty;
     const mortgage = purchaseNum - deposit;
     const ltv = purchaseNum ? mortgage / purchaseNum : 0;
-    const rentalCoverValue = mortgage ? (rentNum * 12) / (mortgage * (stressRateNum / 100)) : 0;
+    
     let mortgageInterest = 0;
     if (mortgageType === 'interestOnly') {
       mortgageInterest = mortgage * (mortgageRateNum / 100) / 12;
@@ -188,6 +188,10 @@ export default function Calculator() {
         mortgageInterest = 0;
       }
     }
+    
+    // Calculate rental cover as: Monthly Rent / Monthly Mortgage Payment
+    const rentalCoverValue = mortgageInterest > 0 ? rentNum / mortgageInterest : 0;
+    
     const expenses = agencyFeeValue + additionalFeesNum;
     const currentValue = soldPrice ? Number(soldPrice) : purchaseNum;
     const growthRate = Number(growth) ? Number(growth) / 100 : 0;
@@ -227,11 +231,11 @@ export default function Calculator() {
     const fiveYearRentalROI = totalInvestment ? ((annualNetProfit * 5) / totalInvestment) : 0; // Total rental ROI over 5 years
     const fiveYearCombinedROI = fiveYearCapitalROI + fiveYearRentalROI;
     
-    // Property Appreciation ROI: (Final Value - Initial Value) / Initial Value × 100
-    // This shows the percentage growth in property value only
-    const roi5Year = purchaseNum ? (capitalGain5Year / purchaseNum) * 100 : 0;
-    const roi10Year = purchaseNum ? (capitalGain10Year / purchaseNum) * 100 : 0;
-    const roi20Year = purchaseNum ? (capitalGain20Year / purchaseNum) * 100 : 0;
+    // Property Appreciation ROI vs Cash Invested: Capital Gain / Total Investment × 100
+    // This shows ROI on the actual cash invested by the investor
+    const roi5Year = totalInvestment ? (capitalGain5Year / totalInvestment) * 100 : 0;
+    const roi10Year = totalInvestment ? (capitalGain10Year / totalInvestment) * 100 : 0;
+    const roi20Year = totalInvestment ? (capitalGain20Year / totalInvestment) * 100 : 0;
 
     // const roi = totalInvestment ? (annualNetProfit / totalInvestment) * 100 : 0;
     const yieldValue = purchaseNum ? annualRent / purchaseNum : 0;
@@ -1055,8 +1059,8 @@ export default function Calculator() {
                     <span style={{ fontWeight: 700, color: '#1a202c', fontSize: 16 }}>{toCurrency(Number(purchase))}</span>
                   </div>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <span style={{ color: '#4a5568', fontWeight: 500 }}>Deposit</span>
-                    <span style={{ fontWeight: 600, color: '#1a202c' }}>{toCurrency(results.deposit)}</span>
+                    <span style={{ color: '#d69e2e', fontWeight: 500 }}>Deposit</span>
+                    <span style={{ fontWeight: 600, color: '#d69e2e' }}>{toCurrency(results.deposit)}</span>
                   </div>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <span style={{ color: '#4a5568', fontWeight: 500 }}>Stamp Duty</span>

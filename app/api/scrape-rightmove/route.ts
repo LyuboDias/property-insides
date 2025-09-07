@@ -72,6 +72,51 @@ export async function POST(req: NextRequest) {
       if (key && value) details[key] = value;
     });
 
+    // Additional tenure extraction for modern RightMove layout
+    if (!details['TENURE'] && !details['Tenure']) {
+      // Look for tenure in various common patterns
+      const tenureSelectors = [
+        '*:contains("TENURE")',
+        '*:contains("Tenure")',
+        '[data-testid="tenure"]',
+        '.tenure-value',
+        '*[class*="tenure"]'
+      ];
+      
+      for (const selector of tenureSelectors) {
+        const tenureElement = $(selector);
+        if (tenureElement.length) {
+          // Get the parent container and look for the value
+          const parent = tenureElement.parent();
+          let tenureText = parent.text() || tenureElement.next().text() || tenureElement.siblings().text();
+          
+          // Extract common tenure types
+          const tenureMatch = tenureText.match(/(Freehold|Leasehold|Commonhold|Share of Freehold)/i);
+          if (tenureMatch) {
+            details['TENURE'] = tenureMatch[1];
+            break;
+          }
+          
+          // If no specific match, look for text after "TENURE" or "Tenure"
+          const afterTenure = tenureText.split(/TENURE|Tenure/i)[1];
+          if (afterTenure) {
+            const cleanTenure = afterTenure.replace(/[^\w\s]/g, ' ').trim().split(/\s+/)[0];
+            if (cleanTenure && cleanTenure.length > 2) {
+              details['TENURE'] = cleanTenure;
+              break;
+            }
+          }
+        }
+      }
+      
+      // Debug logging for tenure extraction
+      console.log('Tenure extraction debug:', {
+        'dt/dd tenure': details['TENURE'] || details['Tenure'],
+        'all details keys': Object.keys(details),
+        'tenure selectors tried': tenureSelectors.length
+      });
+    }
+
     // Key Features
     let keyFeatures: string[] = [];
     $('h2:contains("Key features")').next('ul').find('li').each((_, el) => {
