@@ -439,125 +439,175 @@ export default function Calculator() {
           )}
         </div>
 
-        <form onSubmit={handleCalculate} style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(220px, 1fr))', gap: 24, width: '100%', maxWidth: 1200, marginBottom: 32, background: '#fff', borderRadius: 10, boxShadow: '0 2px 8px rgba(0,0,0,0.04)', padding: 32, color: '#000' }}>
-          {/* Property Details */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-            <label style={{ fontWeight: 500, marginBottom: 2, fontSize: 13, color: '#000' }}>Address</label>
-            <input type="text" value={address} onChange={e => setAddress(e.target.value)} style={inputStyle} />
-          </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-            <label style={{ fontWeight: 500, marginBottom: 2, fontSize: 13, color: '#000' }}>Post Code</label>
-            <input type="text" value={postCode} onChange={e => setPostCode(e.target.value)} style={inputStyle} />
-          </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-            <label style={{ fontWeight: 500, marginBottom: 2, fontSize: 13, color: '#000' }}>Link <span style={{ color: 'red' }}>*</span></label>
-            <input type="url" value={link} onChange={e => setLink(e.target.value)} style={inputStyle} required />
-          </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-            <label style={{ fontWeight: 500, marginBottom: 2, fontSize: 13, color: '#000' }}>Date added</label>
-            <input type="date" value={dateAdded} onChange={e => setDateAdded(e.target.value)} style={inputStyle} />
-          </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-            <label style={{ fontWeight: 500, marginBottom: 2, fontSize: 13, color: '#000' }}>No of beds</label>
-            <input type="number" value={numBeds} onChange={e => setNumBeds(e.target.value)} style={inputStyle} />
-          </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-            <label style={{ fontWeight: 500, marginBottom: 2, fontSize: 13, color: '#000' }}>Tenure</label>
-            <input type="text" value={tenure} onChange={e => setTenure(e.target.value)} style={inputStyle} placeholder="e.g. Freehold, Leasehold" />
-          </div>
-
-          {/* Transaction Details */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-            <label style={{ fontWeight: 500, marginBottom: 2, fontSize: 13, color: '#000' }}>Purchase price <span style={{ color: 'red' }}>*</span></label>
-            <input type="number" value={purchase} onChange={e => setPurchase(e.target.value)} style={inputStyle} required />
-          </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-            <label style={{ fontWeight: 500, marginBottom: 2, fontSize: 13, color: '#000' }}>Sold date</label>
-            <input type="date" value={soldDate} onChange={e => setSoldDate(e.target.value)} style={inputStyle} />
-          </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-            <label style={{ fontWeight: 500, marginBottom: 2, fontSize: 13, color: '#000' }}>Sold price</label>
-            <input type="number" value={soldPrice} onChange={e => setSoldPrice(e.target.value)} style={inputStyle} />
-          </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-            <label style={{ fontWeight: 500, marginBottom: 2, fontSize: 13, color: '#000' }}>Cash available</label>
-            <input type="number" value={cash} onChange={e => setCash(e.target.value)} style={inputStyle} />
-          </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-            <label style={{ fontWeight: 500, marginBottom: 2, fontSize: 13, color: '#000' }}>Repair cost</label>
-            <input type="number" value={repair} onChange={e => setRepair(e.target.value)} style={inputStyle} />
-          </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-            <label style={{ fontWeight: 500, marginBottom: 2, fontSize: 13, color: '#000' }}>Legal fees</label>
-            <input type="number" value={legal} onChange={e => setLegal(e.target.value)} style={inputStyle} />
-          </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-            <label style={{ fontWeight: 500, marginBottom: 2, fontSize: 13, color: '#000' }}>Mortgage fees</label>
-            <input type="number" value={mortgageFees} onChange={e => setMortgageFees(e.target.value)} style={inputStyle} />
-          </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-            <label style={{ fontWeight: 500, marginBottom: 2, fontSize: 13, color: '#000' }}>Insurance (p/y)</label>
-            <input type="number" value={insurance} onChange={e => setInsurance(e.target.value)} style={inputStyle} />
+        <form onSubmit={handleCalculate} style={{ width: '100%', maxWidth: 1200, marginBottom: 32, background: '#fff', borderRadius: 16, boxShadow: '0 8px 32px rgba(0,0,0,0.08)', padding: 40, color: '#000', border: '1px solid rgba(0,0,0,0.05)', display: 'flex', flexDirection: 'column', gap: 32 }}>
+          
+          {/* Property Details Section */}
+          <div>
+            <h3 style={{ fontSize: 16, fontWeight: 600, color: '#1a202c', marginBottom: 16, paddingBottom: 8, borderBottom: '2px solid #f1f5f9' }}>
+              🏠 Property Details
+            </h3>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 20 }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                <label style={{ fontWeight: 500, marginBottom: 2, fontSize: 13, color: '#000' }}>Address</label>
+                <input type="text" value={address} onChange={e => setAddress(e.target.value)} style={inputStyle} />
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                <label style={{ fontWeight: 500, marginBottom: 2, fontSize: 13, color: '#000' }}>Post Code</label>
+                <input type="text" value={postCode} onChange={e => setPostCode(e.target.value)} style={inputStyle} />
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                <label style={{ fontWeight: 500, marginBottom: 2, fontSize: 13, color: '#000' }}>Link <span style={{ color: 'red' }}>*</span></label>
+                <input type="url" value={link} onChange={e => setLink(e.target.value)} style={inputStyle} required />
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                <label style={{ fontWeight: 500, marginBottom: 2, fontSize: 13, color: '#000' }}>Date added</label>
+                <input type="date" value={dateAdded} onChange={e => setDateAdded(e.target.value)} style={inputStyle} />
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                <label style={{ fontWeight: 500, marginBottom: 2, fontSize: 13, color: '#000' }}>No of beds</label>
+                <input type="number" value={numBeds} onChange={e => setNumBeds(e.target.value)} style={inputStyle} />
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                <label style={{ fontWeight: 500, marginBottom: 2, fontSize: 13, color: '#000' }}>Tenure</label>
+                <input type="text" value={tenure} onChange={e => setTenure(e.target.value)} style={inputStyle} placeholder="e.g. Freehold, Leasehold" />
+              </div>
+            </div>
           </div>
 
-          {/* Rental Details */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-            <label style={{ fontWeight: 500, marginBottom: 2, fontSize: 13, color: '#000' }}>Forecast rent (per month) <span style={{ color: 'red' }}>*</span></label>
-            <input type="number" value={rent} onChange={e => setRent(e.target.value)} style={inputStyle} required />
-          </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-            <label style={{ fontWeight: 500, marginBottom: 2, fontSize: 13, color: '#000' }}>Agency fee (% of rent per month)</label>
-            <input type="number" value={agencyFee} onChange={e => setAgencyFee(e.target.value)} style={inputStyle} placeholder="e.g. 10 for 10%" />
-          </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-            <label style={{ fontWeight: 500, marginBottom: 2, fontSize: 13, color: '#000' }}>Additional monthly fees</label>
-            <input type="number" value={additionalFees} onChange={e => setAdditionalFees(e.target.value)} style={inputStyle} />
-          </div>
-
-          {/* Mortgage Details */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-            <label style={{ fontWeight: 500, marginBottom: 2, fontSize: 13, color: '#000' }}>Mortgage rate (%)</label>
-            <input type="number" value={mortgageRate} step="0.01" onChange={e => setMortgageRate(e.target.value)} style={inputStyle} />
-          </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-            <label style={{ fontWeight: 500, marginBottom: 2, fontSize: 13, color: '#000' }}>Term (years)</label>
-            <input type="number" value={mortgageTerm} min="1" max="40" onChange={e => setMortgageTerm(e.target.value)} style={inputStyle} />
-          </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-            <label style={{ fontWeight: 500, marginBottom: 2, fontSize: 13, color: '#000' }}>Mortgage type</label>
-            <select value={mortgageType} onChange={e => setMortgageType(e.target.value)} style={inputStyle}>
-              <option value="interestOnly">Interest Only</option>
-              <option value="repayment">Repayment</option>
-            </select>
-          </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-            <label style={{ fontWeight: 500, marginBottom: 2, fontSize: 13, color: '#000' }}>Max LTV (%)</label>
-            <input type="number" value={maxLtv} step="0.01" onChange={e => setMaxLtv(e.target.value)} style={inputStyle} />
-          </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-            <label style={{ fontWeight: 500, marginBottom: 2, fontSize: 13, color: '#000' }}>Rental cover required (%)</label>
-            <input type="number" value={rentalCover} step="0.01" onChange={e => setRentalCover(e.target.value)} style={inputStyle} />
-          </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-            <label style={{ fontWeight: 500, marginBottom: 2, fontSize: 13, color: '#000' }}>Stress rate (%)</label>
-            <input type="number" value={stressRate} step="0.01" onChange={e => setStressRate(e.target.value)} style={inputStyle} />
-          </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-            <label style={{ fontWeight: 500, marginBottom: 2, fontSize: 13, color: '#000' }}>Deposit (override, optional)</label>
-            <input type="number" value={depositOverride} onChange={e => setDepositOverride(e.target.value)} style={inputStyle} placeholder="Leave blank to auto-calculate" />
-          </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-            <label style={{ fontWeight: 500, marginBottom: 2, fontSize: 13, color: '#000' }}>Expected property growth (%)</label>
-            <input type="number" value={growth} onChange={e => setGrowth(e.target.value)} style={inputStyle} placeholder="e.g. 3 for 3% per year" />
+          {/* Financial Details Section */}
+          <div>
+            <h3 style={{ fontSize: 16, fontWeight: 600, color: '#1a202c', marginBottom: 16, paddingBottom: 8, borderBottom: '2px solid #f1f5f9' }}>
+              💰 Financial Details
+            </h3>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 20 }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                <label style={{ fontWeight: 500, marginBottom: 2, fontSize: 13, color: '#000' }}>Purchase price <span style={{ color: 'red' }}>*</span></label>
+                <input type="number" value={purchase} onChange={e => setPurchase(e.target.value)} style={inputStyle} required />
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                <label style={{ fontWeight: 500, marginBottom: 2, fontSize: 13, color: '#000' }}>Cash available</label>
+                <input type="number" value={cash} onChange={e => setCash(e.target.value)} style={inputStyle} />
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                <label style={{ fontWeight: 500, marginBottom: 2, fontSize: 13, color: '#000' }}>Repair cost</label>
+                <input type="number" value={repair} onChange={e => setRepair(e.target.value)} style={inputStyle} />
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                <label style={{ fontWeight: 500, marginBottom: 2, fontSize: 13, color: '#000' }}>Legal fees</label>
+                <input type="number" value={legal} onChange={e => setLegal(e.target.value)} style={inputStyle} />
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                <label style={{ fontWeight: 500, marginBottom: 2, fontSize: 13, color: '#000' }}>Mortgage fees</label>
+                <input type="number" value={mortgageFees} onChange={e => setMortgageFees(e.target.value)} style={inputStyle} />
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                <label style={{ fontWeight: 500, marginBottom: 2, fontSize: 13, color: '#000' }}>Insurance (p/y)</label>
+                <input type="number" value={insurance} onChange={e => setInsurance(e.target.value)} style={inputStyle} />
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                <label style={{ fontWeight: 500, marginBottom: 2, fontSize: 13, color: '#000' }}>Sold date</label>
+                <input type="date" value={soldDate} onChange={e => setSoldDate(e.target.value)} style={inputStyle} />
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                <label style={{ fontWeight: 500, marginBottom: 2, fontSize: 13, color: '#000' }}>Sold price</label>
+                <input type="number" value={soldPrice} onChange={e => setSoldPrice(e.target.value)} style={inputStyle} />
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                <label style={{ fontWeight: 500, marginBottom: 2, fontSize: 13, color: '#000' }}>Expected property growth (%)</label>
+                <input type="number" value={growth} onChange={e => setGrowth(e.target.value)} style={inputStyle} placeholder="e.g. 3 for 3% per year" />
+              </div>
+            </div>
           </div>
 
-          {/* Notes/Comments */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 6, gridColumn: '1 / -1' }}>
-            <label style={{ fontWeight: 500, marginBottom: 2, fontSize: 13, color: '#000' }}>Comment/notes</label>
-            <textarea value={comment} onChange={e => setComment(e.target.value)} style={inputStyle} rows={2} />
+          {/* Rental Details Section */}
+          <div>
+            <h3 style={{ fontSize: 16, fontWeight: 600, color: '#1a202c', marginBottom: 16, paddingBottom: 8, borderBottom: '2px solid #f1f5f9' }}>
+              🏠 Rental Details
+            </h3>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 20 }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                <label style={{ fontWeight: 500, marginBottom: 2, fontSize: 13, color: '#000' }}>Forecast rent (per month) <span style={{ color: 'red' }}>*</span></label>
+                <input type="number" value={rent} onChange={e => setRent(e.target.value)} style={inputStyle} required />
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                <label style={{ fontWeight: 500, marginBottom: 2, fontSize: 13, color: '#000' }}>Agency fee (% of rent per month)</label>
+                <input type="number" value={agencyFee} onChange={e => setAgencyFee(e.target.value)} style={inputStyle} placeholder="e.g. 10 for 10%" />
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                <label style={{ fontWeight: 500, marginBottom: 2, fontSize: 13, color: '#000' }}>Additional monthly fees</label>
+                <input type="number" value={additionalFees} onChange={e => setAdditionalFees(e.target.value)} style={inputStyle} />
+              </div>
+            </div>
           </div>
-          <div style={{ gridColumn: '1 / -1', textAlign: 'right' }}>
-            <button type="submit" style={buttonStyle}>Calculate</button>
+
+          {/* Mortgage Details Section */}
+          <div>
+            <h3 style={{ fontSize: 16, fontWeight: 600, color: '#1a202c', marginBottom: 16, paddingBottom: 8, borderBottom: '2px solid #f1f5f9' }}>
+              🏦 Mortgage Details
+            </h3>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 20 }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                <label style={{ fontWeight: 500, marginBottom: 2, fontSize: 13, color: '#000' }}>Mortgage rate (%)</label>
+                <input type="number" value={mortgageRate} step="0.01" onChange={e => setMortgageRate(e.target.value)} style={inputStyle} />
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                <label style={{ fontWeight: 500, marginBottom: 2, fontSize: 13, color: '#000' }}>Term (years)</label>
+                <input type="number" value={mortgageTerm} min="1" max="40" onChange={e => setMortgageTerm(e.target.value)} style={inputStyle} />
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                <label style={{ fontWeight: 500, marginBottom: 2, fontSize: 13, color: '#000' }}>Mortgage type</label>
+                <select value={mortgageType} onChange={e => setMortgageType(e.target.value)} style={inputStyle}>
+                  <option value="interestOnly">Interest Only</option>
+                  <option value="repayment">Repayment</option>
+                </select>
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                <label style={{ fontWeight: 500, marginBottom: 2, fontSize: 13, color: '#000' }}>Max LTV (%)</label>
+                <input type="number" value={maxLtv} step="0.01" onChange={e => setMaxLtv(e.target.value)} style={inputStyle} />
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                <label style={{ fontWeight: 500, marginBottom: 2, fontSize: 13, color: '#000' }}>Rental cover required (%)</label>
+                <input type="number" value={rentalCover} step="0.01" onChange={e => setRentalCover(e.target.value)} style={inputStyle} />
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                <label style={{ fontWeight: 500, marginBottom: 2, fontSize: 13, color: '#000' }}>Stress rate (%)</label>
+                <input type="number" value={stressRate} step="0.01" onChange={e => setStressRate(e.target.value)} style={inputStyle} />
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 6, gridColumn: 'span 3' }}>
+                <label style={{ fontWeight: 500, marginBottom: 2, fontSize: 13, color: '#000' }}>Deposit (override, optional)</label>
+                <input type="number" value={depositOverride} onChange={e => setDepositOverride(e.target.value)} style={inputStyle} placeholder="Leave blank to auto-calculate" />
+              </div>
+            </div>
+          </div>
+
+          {/* Additional Section */}
+          <div>
+            <h3 style={{ fontSize: 16, fontWeight: 600, color: '#1a202c', marginBottom: 16, paddingBottom: 8, borderBottom: '2px solid #f1f5f9' }}>
+              📝 Additional Information
+            </h3>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                <label style={{ fontWeight: 500, marginBottom: 2, fontSize: 13, color: '#000' }}>Comment/notes</label>
+                <textarea value={comment} onChange={e => setComment(e.target.value)} style={inputStyle} rows={3} />
+              </div>
+            </div>
+          </div>
+
+          {/* Submit Button */}
+          <div style={{ textAlign: 'center', paddingTop: 16 }}>
+            <button type="submit" style={{
+              ...buttonStyle,
+              background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+              fontSize: 16,
+              fontWeight: 600,
+              padding: '14px 40px',
+              borderRadius: 12,
+              boxShadow: '0 8px 20px rgba(102,126,234,0.3)',
+              transform: 'scale(1)',
+              transition: 'all 0.2s ease'
+            }}>
+              🧮 Calculate Investment
+            </button>
           </div>
         </form>
         {results && (
