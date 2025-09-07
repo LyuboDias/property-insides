@@ -8,8 +8,6 @@ interface PropertySearchParams {
   bedrooms?: string;
   radius?: string;
   propertyType?: string;
-  offset?: number;
-  limit?: number;
 }
 
 interface PropertyResult {
@@ -52,71 +50,119 @@ export async function POST(req: NextRequest) {
     const searchUrl = buildRightMoveFindUrl(params, locationData);
     console.log('Final search URL:', searchUrl);
     
-    // Step 3: Fetch the search results page
-    const response = await fetch(searchUrl, {
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
-        'Accept-Language': 'en-US,en;q=0.9',
-        'Accept-Encoding': 'gzip, deflate, br',
-        'Connection': 'keep-alive',
-        'Upgrade-Insecure-Requests': '1',
-        'Sec-Fetch-Dest': 'document',
-        'Sec-Fetch-Mode': 'navigate',
-        'Sec-Fetch-Site': 'none',
-        'Cache-Control': 'max-age=0',
-      }
-    });
-
-    if (!response.ok) {
-      console.error('RightMove fetch failed:', response.status, response.statusText);
-      return NextResponse.json({ 
-        error: `Failed to fetch search results: ${response.status} ${response.statusText}` 
-      }, { status: 500 });
-    }
-
-    const html = await response.text();
-    console.log('HTML length:', html.length);
-    const title = html.includes('<title>') ? html.match(/<title[^>]*>([^<]+)<\/title>/i)?.[1] : 'No title found';
-    console.log('HTML title check:', title);
+    // Step 3: Scrape ALL pages at once
+    console.log('=== SCRAPING ALL PAGES ===');
     
-    // Debug: If we get an error page, let's analyze it
-    if (title && (title.includes("couldn't find") || title.includes("error")) || html.length < 200000) {
-      console.log('=== ERROR PAGE DETECTED ===');
-      console.log('HTML preview (first 1000 chars):', html.substring(0, 1000));
-      console.log('Search URL was:', searchUrl);
+    const allProperties: PropertyResult[] = [];
+    const seenIds = new Set<string>();
+    let rightMoveTotalCount = 0;
+    let currentIndex = 0;
+    let pageNumber = 1;
+    
+    const headers = {
+      'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+      'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+      'Accept-Language': 'en-US,en;q=0.9',
+      'Accept-Encoding': 'gzip, deflate, br',
+      'Connection': 'keep-alive',
+      'Upgrade-Insecure-Requests': '1',
+      'Sec-Fetch-Dest': 'document',
+      'Sec-Fetch-Mode': 'navigate',
+      'Sec-Fetch-Site': 'none',
+      'Cache-Control': 'max-age=0',
+    };
+    
+    // Loop through all pages until no more results
+    while (true) {
+      const pageUrl = currentIndex === 0 
+        ? searchUrl 
+        : `${searchUrl}${searchUrl.includes('?') ? '&' : '?'}index=${currentIndex}`;
       
-      // Try a simpler URL without property type filters
-      if (params.propertyType) {
-        console.log('Retrying without property type filter...');
-        const simpleParams = { ...params };
-        delete simpleParams.propertyType;
-        const simpleUrl = buildRightMoveFindUrl(simpleParams, locationData);
-        console.log('Trying simpler URL:', simpleUrl);
+      console.log(`--- Scraping Page ${pageNumber} (index: ${currentIndex}) ---`);
+      console.log(`URL: ${pageUrl}`);
+      
+      const response = await fetch(pageUrl, { headers });
+      
+      if (!response.ok) {
+        console.error(`Page ${pageNumber} failed:`, response.status, response.statusText);
+        break;
       }
+      
+      const html = await response.text();
+      console.log(`Page ${pageNumber} HTML length:`, html.length);
+      
+      // Check for error pages
+      const title = html.includes('<title>') ? html.match(/<title[^>]*>([^<]+)<\/title>/i)?.[1] : 'No title found';
+      if (title && (title.includes("couldn't find") || title.includes("error")) || html.length < 50000) {
+        console.log(`Page ${pageNumber} appears to be an error page or empty`);
+        break;
+      }
+      
+      // Extract properties from this page
+      const pageResult = extractPropertiesFromHtml(html, 0, 1000, searchUrl); // Get all properties from page
+      
+      // Set total count from first page
+      if (pageNumber === 1) {
+        rightMoveTotalCount = pageResult.rightMoveTotalCount || pageResult.totalFound;
+      }
+      
+      console.log(`Page ${pageNumber}: Found ${pageResult.properties.length} properties`);
+      
+      // If no properties found, we've reached the end
+      if (pageResult.properties.length === 0) {
+        console.log(`Page ${pageNumber}: No properties found, stopping`);
+        break;
+      }
+      
+      // Add unique properties to our collection
+      let newPropertiesCount = 0;
+      for (const property of pageResult.properties) {
+        if (property.id && !seenIds.has(property.id)) {
+          seenIds.add(property.id);
+          allProperties.push(property);
+          newPropertiesCount++;
+        }
+      }
+      
+      console.log(`Page ${pageNumber}: Added ${newPropertiesCount} new unique properties (${pageResult.properties.length - newPropertiesCount} duplicates)`);
+      
+      // If we got fewer than 20 properties or no new properties, we've probably reached the end
+      if (pageResult.properties.length < 20 || newPropertiesCount === 0) {
+        console.log(`Page ${pageNumber}: Reached end of results`);
+        break;
+      }
+      
+      // Move to next page (RightMove typically shows 24 per page)
+      currentIndex += 24;
+      pageNumber++;
+      
+      // Safety limit to prevent infinite loops
+      if (pageNumber > 50) {
+        console.log('Safety limit reached (50 pages), stopping');
+        break;
+      }
+      
+      // Small delay to be respectful to the server
+      await new Promise(resolve => setTimeout(resolve, 100));
     }
     
-    // Get pagination parameters with defaults
-    const offset = params.offset || 0;
-    const limit = params.limit || 15;
-    
-    const result = extractPropertiesFromHtml(html, offset, limit);
-    console.log('=== Extraction Complete ===');
-    console.log('Total properties found:', result.totalFound);
-    console.log('Properties returned:', result.properties.length);
+    console.log('=== SCRAPING COMPLETE ===');
+    console.log(`Total pages scraped: ${pageNumber - 1}`);
+    console.log(`Total unique properties found: ${allProperties.length}`);
+    console.log(`RightMove reported total: ${rightMoveTotalCount}`);
 
     return NextResponse.json({
       success: true,
-      properties: result.properties,
-      totalFound: result.totalFound,
-      hasMore: (offset + limit) < result.totalFound,
-      currentOffset: offset,
-      limit: limit,
+      properties: allProperties,
+      totalFound: allProperties.length,
+      rightMoveTotalCount: rightMoveTotalCount,
+      pagesScraped: pageNumber - 1,
       searchParams: params,
       locationData,
       debugInfo: {
-        url: searchUrl,
-        htmlLength: html.length,
+        baseUrl: searchUrl,
+        totalPagesScraped: pageNumber - 1,
+        rightMoveTotal: rightMoveTotalCount,
         locationIdentifier: locationData.identifier
       }
     });
@@ -192,7 +238,11 @@ function buildRightMoveFindUrl(params: PropertySearchParams, locationData: {iden
   }
   
   if (params.maxPrice) {
-    searchParams.set('maxPrice', params.maxPrice);
+    // Subtract 1 from maxPrice to get properties "under" rather than "up to and including"
+    // e.g., maxPrice=150000 becomes 149999 to exclude properties at exactly £150,000
+    const adjustedMaxPrice = (parseInt(params.maxPrice) - 1).toString();
+    searchParams.set('maxPrice', adjustedMaxPrice);
+    console.log(`Adjusted maxPrice from ${params.maxPrice} to ${adjustedMaxPrice} for "under" filtering`);
   }
   
   // Bedroom filters
@@ -246,6 +296,10 @@ function buildRightMoveFindUrl(params: PropertySearchParams, locationData: {iden
   // Include sold STC properties
   searchParams.set('_includeSSTC', 'on');
   
+  // Set sorting to Lowest Price first (1 = Lowest Price, 2 = Highest Price)
+  searchParams.set('sortType', '1');
+  console.log('Setting sortType=1 for Lowest Price first');
+  
   const finalUrl = `${baseUrl}?${searchParams.toString()}`;
   console.log('Final URL parameters:', Object.fromEntries(searchParams));
   
@@ -265,12 +319,40 @@ function isInvalidTitle(text: string): boolean {
 /**
  * Extracts property listings from RightMove search results HTML
  */
-function extractPropertiesFromHtml(html: string, offset: number = 0, limit: number = 15): { properties: PropertyResult[], totalFound: number } {
+function extractPropertiesFromHtml(html: string, offset: number = 0, limit: number = 1000, searchUrl: string = ''): { 
+  properties: PropertyResult[], 
+  totalFound: number, 
+  rightMoveTotalCount: number | null,
+  extractedCount: number
+} {
   const $ = cheerio.load(html);
   const properties: PropertyResult[] = [];
   
   // Quick structure check for debugging
   console.log('HTML loaded, extracting properties...');
+  
+  // Check for pagination information from RightMove
+  const paginationInfo = $('span[data-testid="pagination-summary"], .pagination-summary, .searchHeader-resultCount, .search-results-count').first().text().trim();
+  
+  // Note: nextPageUrl logic removed since we handle all pagination at API level
+  
+  // Try to extract total result count from RightMove (e.g., "363 results")
+  const totalResultsText = $('h1, .searchHeader-resultCount, .resultCount, span:contains("results"), span:contains("result")').text();
+  const totalResultsMatch = totalResultsText.match(/(\d+)\s*results?/i);
+  const rightMoveTotalCount = totalResultsMatch ? parseInt(totalResultsMatch[1]) : null;
+  
+  console.log('=== RIGHTMOVE PAGE INFO ===');
+  console.log('Current search URL:', searchUrl);
+  console.log('Pagination info from page:', paginationInfo);
+  console.log('Total results text found:', totalResultsText);
+  console.log('Extracted RightMove total count:', rightMoveTotalCount);
+  console.log('Page title:', $('title').text());
+  
+  // Debug: Check pagination elements
+  console.log('Pagination debugging:');
+  console.log('- Next button found:', $('button[data-testid="nextPage"]').length);
+  console.log('- Next links found:', $('a[href*="index="]').length);
+  console.log('- Pagination buttons found:', $('.Pagination_button__5gDab').length);
   
   // RightMove uses various selectors for property listings - updated for current structure
   const propertySelectors = [
@@ -581,8 +663,13 @@ function extractPropertiesFromHtml(html: string, offset: number = 0, limit: numb
       
       // Only add if we have essential data
       if (link || finalAddress !== 'Address not found') {
+        // Generate a consistent ID based on link or property data
+        const propertyId = link 
+          ? link.match(/properties\/(\d+)/)?.[1] || `link-${link.split('/').pop()}`
+          : `title-${finalTitle.toLowerCase().replace(/[^a-z0-9]/g, '-').slice(0, 50)}`;
+          
         const property = {
-          id: `property-${index}-${Date.now()}`,
+          id: propertyId,
           address: cleanText(finalAddress),
           title: cleanText(finalTitle),
           price: cleanText(finalPrice), 
@@ -609,28 +696,62 @@ function extractPropertiesFromHtml(html: string, offset: number = 0, limit: numb
   
   // Sort properties by price in ascending order (lowest first)
   properties.sort((a, b) => {
-    const priceA = parseFloat(a.price.replace(/[£,]/g, '')) || 0;
-    const priceB = parseFloat(b.price.replace(/[£,]/g, '')) || 0;
+    const priceA = parseFloat(a.price.replace(/[£,]/g, '')) || 999999999;
+    const priceB = parseFloat(b.price.replace(/[£,]/g, '')) || 999999999;
     return priceA - priceB;
   });
   
-  console.log(`Properties sorted by price (ASC)`);
+  console.log(`Properties sorted by price (ASC) - Total: ${properties.length}`);
   
-  // Apply pagination and filtering
-  const totalFound = properties.length;
-  const paginatedProperties = properties.slice(offset, offset + limit);
+  // Debug: Show price range after sorting
+  if (properties.length > 0) {
+    const firstPrice = properties[0].price;
+    const lastPrice = properties[properties.length - 1].price;
+    console.log(`Price range: ${firstPrice} to ${lastPrice}`);
+  }
   
-  console.log(`First few properties for debugging:`, paginatedProperties.slice(0, 3).map(p => ({
+  // Deduplicate properties by ID to avoid duplicates
+  const uniqueProperties: PropertyResult[] = [];
+  const seenIds = new Set<string>();
+  
+  for (const property of properties) {
+    if (property.id && !seenIds.has(property.id)) {
+      seenIds.add(property.id);
+      uniqueProperties.push(property);
+    } else if (!property.id) {
+      // Fallback for properties without ID - use link or title
+      const fallbackKey = property.link || property.title?.toLowerCase().trim() || `${property.price}-${property.address}`;
+      if (fallbackKey && !seenIds.has(fallbackKey)) {
+        seenIds.add(fallbackKey);
+        uniqueProperties.push(property);
+      }
+    }
+  }
+  
+  console.log(`=== DEDUPLICATION ===`);
+  console.log(`Original properties: ${properties.length}, Unique properties: ${uniqueProperties.length}`);
+  
+  // Apply limit to get exactly the requested number of properties
+  const totalFound = uniqueProperties.length;
+  // Return all unique properties from this page
+  const actualTotalCount = rightMoveTotalCount || totalFound;
+  
+  console.log(`=== EXTRACTION DEBUG ===`);
+  console.log(`RightMove total count: ${rightMoveTotalCount}`);
+  console.log(`Unique properties extracted: ${uniqueProperties.length}`);
+  console.log(`Total found on page: ${totalFound}`);
+  console.log(`First few properties:`, uniqueProperties.slice(0, 3).map(p => ({
     price: p.price,
+    title: p.title?.substring(0, 30) || 'No title',
     propertyType: p.propertyType,
     bedrooms: p.bedrooms
   })));
   
-  console.log(`Returning ${paginatedProperties.length} properties`);
-  
   return {
-    properties: paginatedProperties,
-    totalFound: totalFound
+    properties: uniqueProperties,
+    totalFound: actualTotalCount, // Use RightMove's count if available
+    rightMoveTotalCount: rightMoveTotalCount, // Include RightMove's actual count for debugging
+    extractedCount: totalFound, // Our extracted count for comparison
   };
 }
 
