@@ -75,6 +75,8 @@ export default function PropertySearch() {
         throw new Error(data.error || 'Search failed');
       }
 
+      console.log('Search response data:', data);
+
       let { properties } = data;
 
       console.log(`API returned ${properties.length} properties from ${data.pagesScraped} pages`);
@@ -316,7 +318,7 @@ export default function PropertySearch() {
                 value={location}
                 onChange={e => setLocation(e.target.value)}
                 placeholder="e.g. Leeds, LS1 1AA"
-                style={{ width: '100%', padding: '12px 16px', border: '1px solid #d1d5db', borderRadius: 8, fontSize: 14 }}
+                style={{ width: '100%', padding: '12px 16px', border: '1px solid #d1d5db', borderRadius: 8, fontSize: 14, background: '#fff', color: '#000' }}
                 required
               />
             </div>
@@ -331,7 +333,7 @@ export default function PropertySearch() {
                 value={minPrice}
                 onChange={e => setMinPrice(e.target.value)}
                 placeholder="e.g. 100000"
-                style={{ width: '100%', padding: '12px 16px', border: '1px solid #d1d5db', borderRadius: 8, fontSize: 14 }}
+                style={{ width: '100%', padding: '12px 16px', border: '1px solid #d1d5db', borderRadius: 8, fontSize: 14, background: '#fff', color: '#000' }}
               />
             </div>
 
@@ -345,7 +347,7 @@ export default function PropertySearch() {
                 value={maxPrice}
                 onChange={e => setMaxPrice(e.target.value)}
                 placeholder="e.g. 200000"
-                style={{ width: '100%', padding: '12px 16px', border: '1px solid #d1d5db', borderRadius: 8, fontSize: 14 }}
+                style={{ width: '100%', padding: '12px 16px', border: '1px solid #d1d5db', borderRadius: 8, fontSize: 14, background: '#fff', color: '#000' }}
               />
             </div>
 
@@ -357,7 +359,7 @@ export default function PropertySearch() {
               <select
                 value={bedrooms}
                 onChange={e => setBedrooms(e.target.value)}
-                style={{ width: '100%', padding: '12px 16px', border: '1px solid #d1d5db', borderRadius: 8, fontSize: 14 }}
+                style={{ width: '100%', padding: '12px 16px', border: '1px solid #d1d5db', borderRadius: 8, fontSize: 14, background: '#fff', color: '#000' }}
               >
                 <option value="">Any</option>
                 <option value="1">1+</option>
@@ -376,7 +378,7 @@ export default function PropertySearch() {
               <select
                 value={propertyType}
                 onChange={e => setPropertyType(e.target.value)}
-                style={{ width: '100%', padding: '12px 16px', border: '1px solid #d1d5db', borderRadius: 8, fontSize: 14 }}
+                style={{ width: '100%', padding: '12px 16px', border: '1px solid #d1d5db', borderRadius: 8, fontSize: 14, background: '#fff', color: '#000' }}
               >
                 <option value="">Any</option>
                 <option value="Houses">Houses</option>

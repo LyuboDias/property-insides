@@ -37,6 +37,7 @@ export async function POST(req: NextRequest) {
 
     console.log('=== Starting RightMove Search Process ===');
     console.log('Search params:', params);
+    console.log('Input location:', params.location);
 
     // Step 1: Get location identifier from RightMove
     const locationData = await getLocationIdentifier(params.location);
@@ -151,6 +152,27 @@ export async function POST(req: NextRequest) {
     console.log(`Total unique properties found: ${allProperties.length}`);
     console.log(`RightMove reported total: ${rightMoveTotalCount}`);
 
+    // If no properties found, provide helpful feedback
+    if (allProperties.length === 0) {
+      console.log('=== NO PROPERTIES FOUND DEBUG ===');
+      console.log(`RightMove reported total: ${rightMoveTotalCount} properties`);
+      console.log('Search URL used:', searchUrl);
+      console.log('Location used:', locationData);
+      console.log('Search parameters:', params);
+      
+      if (rightMoveTotalCount === 0) {
+        console.log('❌ RightMove itself has NO properties matching these criteria:');
+        console.log('SOLUTION: Adjust your search criteria:');
+        console.log('  • Price range: Try £120k-£300k for ME10 (Sittingbourne) area');
+        console.log('  • Property type: Try "Any" instead of "Houses only"');
+        console.log('  • Radius: Try 10+ miles to include more areas');
+        console.log('  • Location: Try "Sittingbourne" or "Kent" instead of postcode');
+      } else {
+        console.log('⚠️ RightMove HAS properties but extraction failed');
+        console.log('This indicates a scraping/parsing issue');
+      }
+    }
+
     return NextResponse.json({
       success: true,
       properties: allProperties,
@@ -163,7 +185,9 @@ export async function POST(req: NextRequest) {
         baseUrl: searchUrl,
         totalPagesScraped: pageNumber - 1,
         rightMoveTotal: rightMoveTotalCount,
-        locationIdentifier: locationData.identifier
+        locationIdentifier: locationData.identifier,
+        searchSuccessful: true,
+        noResultsReason: allProperties.length === 0 ? 'No properties found matching criteria in this location' : null
       }
     });
 
@@ -187,6 +211,7 @@ async function getLocationIdentifier(location: string): Promise<{identifier: str
     // For now, we'll create a basic mapping for common locations
     // In a production system, this would call RightMove's location API
     const locationMap: Record<string, {identifier: string, displayName: string}> = {
+      // Major Cities
       'leeds': { identifier: 'REGION^787', displayName: 'Leeds, West Yorkshire' },
       'london': { identifier: 'REGION^87490', displayName: 'London' },
       'manchester': { identifier: 'REGION^775', displayName: 'Manchester' },
@@ -196,6 +221,29 @@ async function getLocationIdentifier(location: string): Promise<{identifier: str
       'glasgow': { identifier: 'REGION^1649', displayName: 'Glasgow' },
       'edinburgh': { identifier: 'REGION^1623', displayName: 'Edinburgh' },
       'cardiff': { identifier: 'REGION^1649', displayName: 'Cardiff' },
+      
+      // Kent (for ME postcodes)
+      'sittingbourne': { identifier: 'REGION^1354', displayName: 'Sittingbourne, Kent' },
+      'canterbury': { identifier: 'REGION^1323', displayName: 'Canterbury, Kent' },
+      'maidstone': { identifier: 'REGION^1351', displayName: 'Maidstone, Kent' },
+      'kent': { identifier: 'REGION^1315', displayName: 'Kent' },
+      
+      // Other popular areas
+      'bradford': { identifier: 'REGION^788', displayName: 'Bradford, West Yorkshire' },
+      'sheffield': { identifier: 'REGION^795', displayName: 'Sheffield, South Yorkshire' },
+      'nottingham': { identifier: 'REGION^780', displayName: 'Nottingham' },
+      'leicester': { identifier: 'REGION^771', displayName: 'Leicester' },
+      'coventry': { identifier: 'REGION^1235', displayName: 'Coventry' },
+      'hull': { identifier: 'REGION^765', displayName: 'Hull' },
+      'stoke': { identifier: 'REGION^793', displayName: 'Stoke-on-Trent' },
+      'wolverhampton': { identifier: 'REGION^800', displayName: 'Wolverhampton' },
+      'plymouth': { identifier: 'REGION^784', displayName: 'Plymouth' },
+      'derby': { identifier: 'REGION^751', displayName: 'Derby' },
+      'southampton': { identifier: 'REGION^792', displayName: 'Southampton' },
+      'portsmouth': { identifier: 'REGION^785', displayName: 'Portsmouth' },
+      'newcastle': { identifier: 'REGION^776', displayName: 'Newcastle upon Tyne' },
+      'sunderland': { identifier: 'REGION^794', displayName: 'Sunderland' },
+      'brighton': { identifier: 'REGION^740', displayName: 'Brighton' },
     };
     
     const locationKey = location.toLowerCase().trim();
@@ -206,11 +254,27 @@ async function getLocationIdentifier(location: string): Promise<{identifier: str
       return locationData;
     }
     
-    // If not found in our mapping, try to use the location as-is
-    // This might work for some postcodes and specific areas
-    console.log('Location not found in mapping, using as-is');
+    // If not found in our mapping, check if it's a UK postcode
+    const postcodePattern = /^([A-Z]{1,2})(\d{1,2}[A-Z]?)\s*(\d)([A-Z]{2})$/i;
+    const postcodeMatch = location.replace(/\s/g, '').match(/^([A-Z]{1,2})(\d{1,2}[A-Z]?)(\d)([A-Z]{2})$/i);
+    
+    if (postcodeMatch) {
+      // Format as proper UK postcode: ME10 1JH
+      const formattedPostcode = `${postcodeMatch[1]}${postcodeMatch[2]} ${postcodeMatch[3]}${postcodeMatch[4]}`.toUpperCase();
+      const outcode = `${postcodeMatch[1]}${postcodeMatch[2]}`.toUpperCase(); // ME10
+      
+      console.log('Detected postcode:', formattedPostcode, 'Outcode:', outcode);
+      
+      return {
+        identifier: `OUTCODE^${outcode}`,
+        displayName: formattedPostcode
+      };
+    }
+    
+    // If not a postcode, try to use the location as-is for areas/towns
+    console.log('Location not found in mapping, using as general location');
     return {
-      identifier: `OUTCODE^${location.toUpperCase()}`,
+      identifier: `USERDEFINEDAREA^{%22id%22%3A%22${encodeURIComponent(location.toLowerCase())}%22}`,
       displayName: location
     };
     
@@ -238,11 +302,9 @@ function buildRightMoveFindUrl(params: PropertySearchParams, locationData: {iden
   }
   
   if (params.maxPrice) {
-    // Subtract 1 from maxPrice to get properties "under" rather than "up to and including"
-    // e.g., maxPrice=150000 becomes 149999 to exclude properties at exactly £150,000
-    const adjustedMaxPrice = (parseInt(params.maxPrice) - 1).toString();
-    searchParams.set('maxPrice', adjustedMaxPrice);
-    console.log(`Adjusted maxPrice from ${params.maxPrice} to ${adjustedMaxPrice} for "under" filtering`);
+    // Use exact maxPrice value - don't subtract 1 as it's too restrictive
+    searchParams.set('maxPrice', params.maxPrice);
+    console.log(`Set maxPrice to ${params.maxPrice} (no adjustment)`);
   }
   
   // Bedroom filters
@@ -258,7 +320,7 @@ function buildRightMoveFindUrl(params: PropertySearchParams, locationData: {iden
     else if (radiusMiles <= 0.5) searchParams.set('radius', '0.25');
     else if (radiusMiles <= 1) searchParams.set('radius', '0.5');
     else if (radiusMiles <= 3) searchParams.set('radius', '1.0');
-    else if (radiusMiles <= 5) searchParams.set('radius', '3.0');
+    else if (radiusMiles <= 5) searchParams.set('radius', '5.0'); // Fixed: was 3.0
     else if (radiusMiles <= 10) searchParams.set('radius', '5.0');
     else if (radiusMiles <= 15) searchParams.set('radius', '10.0');
     else if (radiusMiles <= 20) searchParams.set('radius', '15.0');
