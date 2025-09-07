@@ -227,21 +227,23 @@ export default function Calculator() {
       {/* Sidebar */}
       <aside style={{ width: 320, background: '#fff', borderRight: '1px solid #e5e7eb', minHeight: '100vh', padding: '40px 32px 32px 32px', display: 'flex', flexDirection: 'column', gap: 32, boxShadow: '2px 0 8px rgba(0,0,0,0.04)', color: '#000' }}>
         <div>
-          <h1 style={{ fontSize: 22, fontWeight: 700, marginBottom: 16, color: '#000' }}>Buy-to-let deal analyser spreadsheet</h1>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-            <Link href="/" style={{ color: '#0070f3', fontWeight: 500, fontSize: 15, textDecoration: 'underline' }}>Home</Link>
-            <Link href="/property-search" style={{ color: '#0070f3', fontWeight: 500, fontSize: 15, textDecoration: 'underline' }}>Property Search</Link>
-            <Link href="/checklist" style={{ color: '#0070f3', fontWeight: 500, fontSize: 15, textDecoration: 'underline' }}>Checklist</Link>
-          </div>
-        </div>
-        <div>
-          <h2 style={{ fontSize: 16, fontWeight: 600, marginBottom: 8, color: '#000' }}>Instructions</h2>
-          <ul style={{ color: '#000', fontSize: 14, paddingLeft: 18, margin: 0, lineHeight: 1.7 }}>
-            <li>Enter your deal numbers</li>
-            <li>Hit the calculate button</li>
-            <li>Adjust the values to compare deal results</li>
-            <li>Download the spreadsheet if you like</li>
-          </ul>
+          <h1 style={{ fontSize: 28, fontWeight: 700, marginBottom: 8 }}>Deal Calculator</h1>
+          <p style={{ color: '#666', fontSize: 14, marginBottom: 32 }}>Analyze your buy-to-let investments</p>
+          
+          <nav style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+            <Link href="/" style={{ color: '#666', textDecoration: 'none', fontSize: 14, padding: '8px 12px', borderRadius: 6, transition: 'all 0.2s' }}>
+              🏠 Home
+            </Link>
+            <Link href="/calculator" style={{ color: '#0070f3', textDecoration: 'none', fontSize: 14, padding: '8px 12px', borderRadius: 6, background: '#f0f8ff', fontWeight: 500 }}>
+              🧮 Calculator
+            </Link>
+            <Link href="/checklist" style={{ color: '#666', textDecoration: 'none', fontSize: 14, padding: '8px 12px', borderRadius: 6, transition: 'all 0.2s' }}>
+              ✅ Checklist
+            </Link>
+            <Link href="/property-search" style={{ color: '#666', textDecoration: 'none', fontSize: 14, padding: '8px 12px', borderRadius: 6, transition: 'all 0.2s' }}>
+              🔍 Property Search
+            </Link>
+          </nav>
         </div>
       </aside>
       {/* Main content */}

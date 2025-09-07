@@ -91,20 +91,23 @@ export default function Checklist() {
       {/* Sidebar */}
       <aside style={{ width: 320, background: '#fff', borderRight: '1px solid #e5e7eb', minHeight: '100vh', padding: '40px 32px 32px 32px', display: 'flex', flexDirection: 'column', gap: 32, boxShadow: '2px 0 8px rgba(0,0,0,0.04)', color: '#000' }}>
         <div>
-          <h1 style={{ fontSize: 22, fontWeight: 700, marginBottom: 16, color: '#000' }}>Property Viewing Checklist</h1>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-            <Link href="/" style={{ color: '#0070f3', fontWeight: 500, fontSize: 15, textDecoration: 'underline' }}>Home</Link>
-            <Link href="/property-search" style={{ color: '#0070f3', fontWeight: 500, fontSize: 15, textDecoration: 'underline' }}>Property Search</Link>
-            <Link href="/calculator" style={{ color: '#0070f3', fontWeight: 500, fontSize: 15, textDecoration: 'underline' }}>Calculator</Link>
-          </div>
-        </div>
-        <div>
-          <h2 style={{ fontSize: 16, fontWeight: 600, marginBottom: 8, color: '#000' }}>Instructions</h2>
-          <ul style={{ color: '#000', fontSize: 14, paddingLeft: 18, margin: 0, lineHeight: 1.7 }}>
-            <li>Use this checklist when viewing a property</li>
-            <li>Tick off or make notes for each item</li>
-            <li>Bring a printout or use on your device</li>
-          </ul>
+          <h1 style={{ fontSize: 28, fontWeight: 700, marginBottom: 8 }}>Viewing Checklist</h1>
+          <p style={{ color: '#666', fontSize: 14, marginBottom: 32 }}>Essential checks for property viewings</p>
+          
+          <nav style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+            <Link href="/" style={{ color: '#666', textDecoration: 'none', fontSize: 14, padding: '8px 12px', borderRadius: 6, transition: 'all 0.2s' }}>
+              🏠 Home
+            </Link>
+            <Link href="/calculator" style={{ color: '#666', textDecoration: 'none', fontSize: 14, padding: '8px 12px', borderRadius: 6, transition: 'all 0.2s' }}>
+              🧮 Calculator
+            </Link>
+            <Link href="/checklist" style={{ color: '#0070f3', textDecoration: 'none', fontSize: 14, padding: '8px 12px', borderRadius: 6, background: '#f0f8ff', fontWeight: 500 }}>
+              ✅ Checklist
+            </Link>
+            <Link href="/property-search" style={{ color: '#666', textDecoration: 'none', fontSize: 14, padding: '8px 12px', borderRadius: 6, transition: 'all 0.2s' }}>
+              🔍 Property Search
+            </Link>
+          </nav>
         </div>
       </aside>
       {/* Main content */}
