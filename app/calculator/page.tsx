@@ -58,9 +58,91 @@ export default function Calculator() {
   const [comment, setComment] = useState("");
   const [insurance, setInsurance] = useState("");
   const [growth, setGrowth] = useState("");
+  const [tenure, setTenure] = useState("");
+  const [propertyLink, setPropertyLink] = useState("");
+  const [linkLoading, setLinkLoading] = useState(false);
+  const [linkError, setLinkError] = useState("");
 
   // Results state
   const [results, setResults] = useState<any | null>(null);
+
+  // Handle property link scraping and form population
+  const handlePropertyLinkScrape = async () => {
+    if (!propertyLink.trim()) {
+      setLinkError("Please enter a property link");
+      return;
+    }
+
+    // Validate it's a RightMove link
+    if (!propertyLink.includes('rightmove.co.uk/properties/')) {
+      setLinkError("Please enter a valid RightMove property link");
+      return;
+    }
+
+    setLinkLoading(true);
+    setLinkError("");
+
+    try {
+      const response = await fetch("/api/scrape-rightmove", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ url: propertyLink }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to fetch property info");
+      }
+
+      const data = await response.json();
+      const property = data.property;
+
+      // Populate form fields with scraped data
+      if (property.Address && property.Address !== 'Not found') {
+        setAddress(property.Address);
+      }
+
+      if (property['Post Code'] && property['Post Code'] !== 'Not found') {
+        setPostCode(property['Post Code']);
+      }
+
+      if (property.Bedrooms && property.Bedrooms !== 'Not found') {
+        setNumBeds(property.Bedrooms);
+      }
+
+      if (property['Date Added'] && property['Date Added'] !== 'Not found') {
+        // Convert DD/MM/YYYY to YYYY-MM-DD for date input
+        const dateParts = property['Date Added'].split('/');
+        if (dateParts.length === 3) {
+          const formattedDate = `${dateParts[2]}-${dateParts[1]}-${dateParts[0]}`;
+          setDateAdded(formattedDate);
+        }
+      }
+
+      if (property.Price && property.Price !== 'Not found') {
+        // Extract numeric value from price string (e.g., "£140,000" -> "140000")
+        const priceMatch = property.Price.match(/£?([0-9,]+)/);
+        if (priceMatch) {
+          const numericPrice = priceMatch[1].replace(/,/g, '');
+          setPurchase(numericPrice);
+        }
+      }
+
+      if (property.Tenure && property.Tenure !== 'Not found') {
+        setTenure(property.Tenure);
+      }
+
+      // Set the link field to the scraped URL
+      setLink(propertyLink);
+
+      console.log('Property data scraped and form populated:', property);
+      
+    } catch (err: any) {
+      setLinkError(err.message || "Failed to scrape property data");
+      console.error('Property scrape error:', err);
+    } finally {
+      setLinkLoading(false);
+    }
+  };
 
   // Calculate handler
   const handleCalculate = (e: React.FormEvent) => {
@@ -156,6 +238,7 @@ export default function Calculator() {
       dateAdded,
       link,
       numBeds,
+      tenure,
       soldDate,
       soldPrice,
       comment,
@@ -184,6 +267,7 @@ export default function Calculator() {
       ["Days since added", results.dateAdded ? Math.floor((Date.now() - new Date(results.dateAdded).getTime()) / (1000 * 60 * 60 * 24)) : ""],
       ["Link", results.link],
       ["No of beds", results.numBeds],
+      ["Tenure", results.tenure],
       ["Sold date", results.soldDate],
       ["Sold price", results.soldPrice],
       ["Insurance", results.insurance],
@@ -248,6 +332,58 @@ export default function Calculator() {
       </aside>
       {/* Main content */}
       <div style={{ flex: 1, padding: '40px 0', display: 'flex', flexDirection: 'column', alignItems: 'center', color: '#000' }}>
+        {/* Property Link Auto-Population Section */}
+        <div style={{ width: '100%', maxWidth: 1200, background: '#fff', borderRadius: 10, boxShadow: '0 2px 8px rgba(0,0,0,0.04)', padding: 32, marginBottom: 24, color: '#000' }}>
+          <h3 style={{ fontSize: 18, fontWeight: 600, marginBottom: 16, color: '#000' }}>Auto-Populate from RightMove Link</h3>
+          <p style={{ fontSize: 14, color: '#666', marginBottom: 16 }}>
+            Paste a RightMove property link to automatically populate the form fields below.
+          </p>
+          
+          <div style={{ display: 'flex', gap: 12, alignItems: 'flex-end' }}>
+            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 6 }}>
+              <label style={{ fontWeight: 500, marginBottom: 2, fontSize: 13, color: '#000' }}>
+                Property Link
+              </label>
+              <input
+                type="url"
+                value={propertyLink}
+                onChange={e => setPropertyLink(e.target.value)}
+                placeholder="https://www.rightmove.co.uk/properties/123456789#/?channel=RES_BUY"
+                style={{
+                  ...inputStyle,
+                  minHeight: 40
+                }}
+              />
+            </div>
+            <button
+              type="button"
+              onClick={handlePropertyLinkScrape}
+              disabled={linkLoading || !propertyLink.trim()}
+              style={{
+                background: '#0070f3',
+                color: '#fff',
+                border: 'none',
+                borderRadius: 6,
+                padding: '10px 20px',
+                fontSize: 14,
+                fontWeight: 600,
+                cursor: linkLoading || !propertyLink.trim() ? 'not-allowed' : 'pointer',
+                opacity: linkLoading || !propertyLink.trim() ? 0.7 : 1,
+                minHeight: 40,
+                whiteSpace: 'nowrap'
+              }}
+            >
+              {linkLoading ? "Scraping..." : "Auto-Fill Form"}
+            </button>
+          </div>
+          
+          {linkError && (
+            <div style={{ color: 'red', marginTop: 8, fontSize: 14 }}>
+              {linkError}
+            </div>
+          )}
+        </div>
+
         <form onSubmit={handleCalculate} style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(220px, 1fr))', gap: 24, width: '100%', maxWidth: 1200, marginBottom: 32, background: '#fff', borderRadius: 10, boxShadow: '0 2px 8px rgba(0,0,0,0.04)', padding: 32, color: '#000' }}>
           {/* Property Details */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
@@ -269,6 +405,15 @@ export default function Calculator() {
           <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
             <label style={{ fontWeight: 500, marginBottom: 2, fontSize: 13, color: '#000' }}>No of beds <span style={{ color: 'red' }}>*</span></label>
             <input type="number" value={numBeds} onChange={e => setNumBeds(e.target.value)} style={inputStyle} required />
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+            <label style={{ fontWeight: 500, marginBottom: 2, fontSize: 13, color: '#000' }}>Tenure</label>
+            <select value={tenure} onChange={e => setTenure(e.target.value)} style={inputStyle}>
+              <option value="">Select tenure</option>
+              <option value="Freehold">Freehold</option>
+              <option value="Leasehold">Leasehold</option>
+              <option value="Commonhold">Commonhold</option>
+            </select>
           </div>
 
           {/* Transaction Details */}
@@ -391,6 +536,9 @@ export default function Calculator() {
                 )}
                 {results.numBeds && (
                   <tr><th style={thStyle}>No of beds</th><td style={tdStyle}>{results.numBeds}</td></tr>
+                )}
+                {results.tenure && (
+                  <tr><th style={thStyle}>Tenure</th><td style={tdStyle}>{results.tenure}</td></tr>
                 )}
                 {results.soldDate && (
                   <tr><th style={thStyle}>Sold date</th><td style={tdStyle}>{results.soldDate}</td></tr>

@@ -24,17 +24,43 @@ export async function POST(req: NextRequest) {
       $('h1').first().text().trim() ||
       $("h1").text().trim();
 
-    // Price (handle 'Offers Over', 'Guide Price', and standard)
+    // Price (handle 'Offers Over', 'Guide Price', and standard formats)
     let price =
       $('[data-test="price"]').text().trim() ||
       $('.property-header-price').text().trim() ||
-      $('[itemprop="price"]').text().trim() ||
-      $(".key-features + div").find('h2:contains("Offers Over")').next().text().trim();
+      $('[itemprop="price"]').text().trim();
+      
     if (!price) {
-      // Try to find price in h2 or strong tags
-      price = $("h2:contains('Offers Over')").text().trim() || $("h2:contains('Guide Price')").text().trim();
+      // Try multiple patterns for price extraction
+      const priceSelectors = [
+        "h2:contains('Guide Price')",
+        "h2:contains('Offers Over')",
+        "strong:contains('Guide Price')",
+        "strong:contains('Offers Over')",
+        "*:contains('Guide Price')",
+        "*:contains('Offers Over')"
+      ];
+      
+      for (const selector of priceSelectors) {
+        const element = $(selector);
+        if (element.length) {
+          // Get the element and look for price in the same area
+          let priceText = element.parent().text() || element.next().text() || element.text();
+          const priceMatch = priceText.match(/£[\d,]+/);
+          if (priceMatch) {
+            price = priceMatch[0];
+            break;
+          }
+        }
+      }
+      
+      // Fallback: look for any £ price pattern in the entire document
       if (!price) {
-        price = $("strong:contains('Offers Over')").parent().text().trim();
+        const allText = $('body').text();
+        const priceMatch = allText.match(/(?:Guide Price|Offers Over)?\s*£([\d,]+)/i);
+        if (priceMatch) {
+          price = `£${priceMatch[1]}`;
+        }
       }
     }
 
@@ -97,6 +123,24 @@ export async function POST(req: NextRequest) {
       if (src && /rightmove.*\/images\//.test(src)) images.push(src);
     });
 
+    // Date Added
+    let dateAdded = '';
+    const addedOnText = $("*:contains('Added on')").text().trim();
+    if (addedOnText) {
+      const match = addedOnText.match(/Added on (\d{2}\/\d{2}\/\d{4})/);
+      if (match) {
+        dateAdded = match[1];
+      }
+    }
+
+    // Extract postcode from address or location info
+    let postcode = '';
+    const addressText = address;
+    const postcodeMatch = addressText.match(/\b([A-Z]{1,2}\d{1,2}[A-Z]?\s*\d[A-Z]{2})\b/);
+    if (postcodeMatch) {
+      postcode = postcodeMatch[1];
+    }
+
     // Auction Details
     let auctionDetails = '';
     $('h2:contains("MODERN METHOD OF AUCTION")').nextUntil('h2').each((_, el) => {
@@ -110,11 +154,13 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({
       property: {
         Address: address || 'Not found',
+        'Post Code': postcode || 'Not found',
         Price: price || 'Not found',
         'Property Type': details['PROPERTY TYPE'] || 'Not found',
         Bedrooms: details['BEDROOMS'] || 'Not found',
         Bathrooms: details['BATHROOMS'] || 'Not found',
-        Tenure: details['TENURE'] || 'Not found',
+        'Date Added': dateAdded || 'Not found',
+        Tenure: details['TENURE'] || details['Tenure'] || 'Not found',
         'Key Features': keyFeatures.length ? keyFeatures : 'Not found',
         Description: description || 'Not found',
         Agent: agent || 'Not found',
