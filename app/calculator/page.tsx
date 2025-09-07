@@ -204,13 +204,23 @@ export default function Calculator() {
       const annualNetProfit = annualRent - annualExpenses;
     const monthlyNetProfit = annualNetProfit / 12;
     const monthlyExpenses = annualExpenses / 12;
-    // TODO fix the ROI calculation
-    const roi = totalInvestment ? (annualNetProfit / totalInvestment) * 100 : 0;
+    // ROI: Annual Net Profit / Total Investment (as decimal for toPercent function)
+    const roi = totalInvestment ? (annualNetProfit / totalInvestment) : 0;
 
     // Capital gains for multiple periods
     const capitalGain5Year = valueAfter5Years - purchaseNum;
     const capitalGain10Year = valueAfter10Years - purchaseNum;
     const capitalGain20Year = valueAfter20Years - purchaseNum;
+    
+    // ROI Breakdown calculations
+    const yearlyCapitalGrowthROI = growthRate; // Annual growth rate as decimal
+    const yearlyRentROI = roi; // Annual rental ROI
+    const yearlyCombinedROI = yearlyCapitalGrowthROI + yearlyRentROI;
+    
+    // 5-Year ROI breakdown
+    const fiveYearCapitalGrowthROI = purchaseNum ? (capitalGain5Year / purchaseNum) / 5 : 0; // Average annual capital growth
+    const fiveYearRentROI = totalInvestment ? ((annualNetProfit * 5) / totalInvestment) / 5 : 0; // Average annual rental ROI
+    const fiveYearCombinedROI = fiveYearCapitalGrowthROI + fiveYearRentROI;
     
     // Property Appreciation ROI: (Final Value - Initial Value) / Initial Value × 100
     // This shows the percentage growth in property value only
@@ -247,6 +257,12 @@ export default function Calculator() {
       capitalGain5Year,
       capitalGain10Year,
       capitalGain20Year,
+      yearlyCapitalGrowthROI,
+      yearlyRentROI,
+      yearlyCombinedROI,
+      fiveYearCapitalGrowthROI,
+      fiveYearRentROI,
+      fiveYearCombinedROI,
       yieldValue,
       grossYield,
       netYield,
@@ -321,6 +337,12 @@ export default function Calculator() {
       ['5-Year Property ROI (%)', results.roi5Year],
       ['10-Year Property ROI (%)', results.roi10Year],
       ['20-Year Property ROI (%)', results.roi20Year],
+      ['Yearly Capital Growth ROI (%)', results.yearlyCapitalGrowthROI * 100],
+      ['Yearly Rent ROI (%)', results.yearlyRentROI * 100],
+      ['Yearly Combined ROI (%)', results.yearlyCombinedROI * 100],
+      ['5-Year Capital Growth ROI (%)', results.fiveYearCapitalGrowthROI * 100],
+      ['5-Year Rent ROI (%)', results.fiveYearRentROI * 100],
+      ['5-Year Combined ROI (%)', results.fiveYearCombinedROI * 100],
     ];
     csv += rows.map(([k, v]) => `"${k}","${typeof v === 'number' ? v : ''}"`).join('\n');
     const blob = new Blob([csv], { type: 'text/csv' });
@@ -694,10 +716,10 @@ export default function Calculator() {
                 </div>
               </div>
 
-              {/* Key Metrics Card */}
+              {/* Rental Metrics Card */}
               <div style={{ background: '#fff', borderRadius: 16, padding: 24, boxShadow: '0 8px 32px rgba(0,0,0,0.08)', border: '1px solid rgba(0,0,0,0.05)' }}>
                 <h3 style={{ color: '#1a202c', fontSize: 18, fontWeight: 700, margin: 0, marginBottom: 20, display: 'flex', alignItems: 'center', gap: 8 }}>
-                  📊 Key Investment Metrics
+                  📊 Rental Metrics
                 </h3>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
                   <div>
@@ -758,6 +780,68 @@ export default function Calculator() {
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <span style={{ color: '#4a5568', fontWeight: 500 }}>ROI</span>
                     <span style={{ fontWeight: 700, color: '#10b981', fontSize: 16 }}>{toPercent(results.roi)}</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* ROI Breakdown Card */}
+              <div style={{ background: '#fff', borderRadius: 16, padding: 24, boxShadow: '0 8px 32px rgba(0,0,0,0.08)', border: '1px solid rgba(0,0,0,0.05)' }}>
+                <h3 style={{ color: '#1a202c', fontSize: 18, fontWeight: 700, margin: 0, marginBottom: 20, display: 'flex', alignItems: 'center', gap: 8 }}>
+                  💹 ROI Breakdown
+                </h3>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+                  {/* Yearly ROI Section */}
+                  <div>
+                    <h4 style={{ color: '#374151', fontSize: 16, fontWeight: 600, margin: 0, marginBottom: 12 }}>
+                      📅 Yearly ROI
+                    </h4>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <span style={{ color: '#4a5568', fontWeight: 500 }}>Capital Growth ROI</span>
+                        <span style={{ fontWeight: 600, color: '#3b82f6' }}>
+                          {toPercent(results.yearlyCapitalGrowthROI)}
+                        </span>
+                      </div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <span style={{ color: '#4a5568', fontWeight: 500 }}>Rent ROI</span>
+                        <span style={{ fontWeight: 600, color: '#10b981' }}>
+                          {toPercent(results.yearlyRentROI)}
+                        </span>
+                      </div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: 8, borderTop: '1px solid #e5e7eb' }}>
+                        <span style={{ color: '#1a202c', fontWeight: 700 }}>Combined ROI</span>
+                        <span style={{ fontWeight: 700, color: '#7c3aed', fontSize: 16 }}>
+                          {toPercent(results.yearlyCombinedROI)}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* 5-Year ROI Section */}
+                  <div>
+                    <h4 style={{ color: '#374151', fontSize: 16, fontWeight: 600, margin: 0, marginBottom: 12 }}>
+                      📈 5-Year Average ROI
+                    </h4>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <span style={{ color: '#4a5568', fontWeight: 500 }}>Capital Growth ROI</span>
+                        <span style={{ fontWeight: 600, color: '#3b82f6' }}>
+                          {toPercent(results.fiveYearCapitalGrowthROI)}
+                        </span>
+                      </div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <span style={{ color: '#4a5568', fontWeight: 500 }}>Rent ROI</span>
+                        <span style={{ fontWeight: 600, color: '#10b981' }}>
+                          {toPercent(results.fiveYearRentROI)}
+                        </span>
+                      </div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: 8, borderTop: '1px solid #e5e7eb' }}>
+                        <span style={{ color: '#1a202c', fontWeight: 700 }}>Combined ROI</span>
+                        <span style={{ fontWeight: 700, color: '#7c3aed', fontSize: 16 }}>
+                          {toPercent(results.fiveYearCombinedROI)}
+                        </span>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
