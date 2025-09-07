@@ -40,7 +40,7 @@ export default function Calculator() {
   const [rent, setRent] = useState("");
   const [legal, setLegal] = useState("1000");
   const [mortgageFees, setMortgageFees] = useState("2000");
-  const [mortgageRate, setMortgageRate] = useState("5.0");
+  const [mortgageRate, setMortgageRate] = useState("4.5");
   const [mortgageTerm, setMortgageTerm] = useState("25");
   const [mortgageType, setMortgageType] = useState("interestOnly"); // 'interestOnly' or 'repayment'
   const [maxLtv, setMaxLtv] = useState("75");
@@ -48,7 +48,7 @@ export default function Calculator() {
   const [stressRate, setStressRate] = useState("8.0");
   // New fields
   const [depositOverride, setDepositOverride] = useState("");
-  const [agencyFee, setAgencyFee] = useState(""); // percent
+  const [agencyFee, setAgencyFee] = useState("11"); // percent
   const [additionalFees, setAdditionalFees] = useState("");
   const [dateAdded, setDateAdded] = useState("");
   const [link, setLink] = useState("");
@@ -56,9 +56,10 @@ export default function Calculator() {
   const [soldDate, setSoldDate] = useState("");
   const [soldPrice, setSoldPrice] = useState("");
   const [comment, setComment] = useState("");
-  const [insurance, setInsurance] = useState("");
-  const [growth, setGrowth] = useState("");
+  const [insurance, setInsurance] = useState("350");
+  const [growth, setGrowth] = useState("7");
   const [tenure, setTenure] = useState("");
+  const [propertyImages, setPropertyImages] = useState<string[]>([]);
   const [propertyLink, setPropertyLink] = useState("");
   const [linkLoading, setLinkLoading] = useState(false);
   const [linkError, setLinkError] = useState("");
@@ -129,6 +130,15 @@ export default function Calculator() {
 
       if (property.Tenure && property.Tenure !== 'Not found') {
         setTenure(property.Tenure);
+      }
+
+      console.log('Property Images from API:', property.Images);
+      if (property.Images && Array.isArray(property.Images) && property.Images.length > 0) {
+        console.log('Setting property images:', property.Images.length, 'images');
+        setPropertyImages(property.Images);
+      } else {
+        console.log('No property images found or invalid format');
+        setPropertyImages([]);
       }
 
       // Set the link field to the scraped URL
@@ -239,6 +249,7 @@ export default function Calculator() {
       link,
       numBeds,
       tenure,
+      propertyImages,
       soldDate,
       soldPrice,
       comment,
@@ -387,33 +398,28 @@ export default function Calculator() {
         <form onSubmit={handleCalculate} style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(220px, 1fr))', gap: 24, width: '100%', maxWidth: 1200, marginBottom: 32, background: '#fff', borderRadius: 10, boxShadow: '0 2px 8px rgba(0,0,0,0.04)', padding: 32, color: '#000' }}>
           {/* Property Details */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-            <label style={{ fontWeight: 500, marginBottom: 2, fontSize: 13, color: '#000' }}>Address <span style={{ color: 'red' }}>*</span></label>
-            <input type="text" value={address} onChange={e => setAddress(e.target.value)} style={inputStyle} required />
+            <label style={{ fontWeight: 500, marginBottom: 2, fontSize: 13, color: '#000' }}>Address</label>
+            <input type="text" value={address} onChange={e => setAddress(e.target.value)} style={inputStyle} />
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-            <label style={{ fontWeight: 500, marginBottom: 2, fontSize: 13, color: '#000' }}>Post Code <span style={{ color: 'red' }}>*</span></label>
-            <input type="text" value={postCode} onChange={e => setPostCode(e.target.value)} style={inputStyle} required />
+            <label style={{ fontWeight: 500, marginBottom: 2, fontSize: 13, color: '#000' }}>Post Code</label>
+            <input type="text" value={postCode} onChange={e => setPostCode(e.target.value)} style={inputStyle} />
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
             <label style={{ fontWeight: 500, marginBottom: 2, fontSize: 13, color: '#000' }}>Link <span style={{ color: 'red' }}>*</span></label>
             <input type="url" value={link} onChange={e => setLink(e.target.value)} style={inputStyle} required />
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-            <label style={{ fontWeight: 500, marginBottom: 2, fontSize: 13, color: '#000' }}>Date added <span style={{ color: 'red' }}>*</span></label>
-            <input type="date" value={dateAdded} onChange={e => setDateAdded(e.target.value)} style={inputStyle} required />
+            <label style={{ fontWeight: 500, marginBottom: 2, fontSize: 13, color: '#000' }}>Date added</label>
+            <input type="date" value={dateAdded} onChange={e => setDateAdded(e.target.value)} style={inputStyle} />
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-            <label style={{ fontWeight: 500, marginBottom: 2, fontSize: 13, color: '#000' }}>No of beds <span style={{ color: 'red' }}>*</span></label>
-            <input type="number" value={numBeds} onChange={e => setNumBeds(e.target.value)} style={inputStyle} required />
+            <label style={{ fontWeight: 500, marginBottom: 2, fontSize: 13, color: '#000' }}>No of beds</label>
+            <input type="number" value={numBeds} onChange={e => setNumBeds(e.target.value)} style={inputStyle} />
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
             <label style={{ fontWeight: 500, marginBottom: 2, fontSize: 13, color: '#000' }}>Tenure</label>
-            <select value={tenure} onChange={e => setTenure(e.target.value)} style={inputStyle}>
-              <option value="">Select tenure</option>
-              <option value="Freehold">Freehold</option>
-              <option value="Leasehold">Leasehold</option>
-              <option value="Commonhold">Commonhold</option>
-            </select>
+            <input type="text" value={tenure} onChange={e => setTenure(e.target.value)} style={inputStyle} placeholder="e.g. Freehold, Leasehold" />
           </div>
 
           {/* Transaction Details */}
@@ -510,81 +516,309 @@ export default function Calculator() {
             <button type="submit" style={buttonStyle}>Calculate</button>
           </div>
         </form>
-        {results && (
-          <div style={{ background: '#f8fafc', borderRadius: 8, border: '1px solid #e5e7eb', padding: 24, maxWidth: 900, width: '100%', color: '#000' }}>
-            {/* Address and Post Code as title */}
-            {(address || postCode) && (
-              <div style={{ fontWeight: 700, fontSize: 24, marginBottom: 16, color: '#000' }}>
-                {address.toUpperCase()}{address && postCode ? " - " : ""}{postCode.toUpperCase()}
-              </div>
-            )}
+{results && (
+          <div style={{ width: '100%', maxWidth: 1200, display: 'flex', flexDirection: 'column', gap: 32 }}>
+
+            {/* Warning Alert */}
             {Number(cash) < results.totalInvestment && (
-              <div style={{ color: 'red', fontWeight: 600, marginBottom: 16, fontSize: 16 }}>
-                Warning: Your available cash ({toCurrency(Number(cash))}) is less than the total investment required ({toCurrency(results.totalInvestment)}).
+              <div style={{ 
+                background: 'linear-gradient(135deg, #ff6b6b, #ee5a52)', 
+                color: '#fff', 
+                padding: 20, 
+                borderRadius: 12, 
+                boxShadow: '0 4px 12px rgba(255,107,107,0.3)',
+                fontSize: 16,
+                fontWeight: 500
+              }}>
+                ⚠️ Warning: Your available cash ({toCurrency(Number(cash))}) is less than the total investment required ({toCurrency(results.totalInvestment)}).
               </div>
             )}
-            <table style={{ borderCollapse: 'collapse', width: '100%' }}>
-              <tbody>
-                {results.dateAdded && (
-                  <tr><th style={thStyle}>Date added</th><td style={tdStyle}>{results.dateAdded}</td></tr>
-                )}
-                {results.dateAdded && (
-                  <tr><th style={thStyle}>Days since added</th><td style={tdStyle}>{Math.floor((Date.now() - new Date(results.dateAdded).getTime()) / (1000 * 60 * 60 * 24))}</td></tr>
-                )}
-                {results.link && (
-                  <tr><th style={thStyle}>Link</th><td style={tdStyle}><a href={results.link} target="_blank" rel="noopener noreferrer" style={{ color: '#0070f3' }}>{results.link}</a></td></tr>
-                )}
-                {results.numBeds && (
-                  <tr><th style={thStyle}>No of beds</th><td style={tdStyle}>{results.numBeds}</td></tr>
-                )}
-                {results.tenure && (
-                  <tr><th style={thStyle}>Tenure</th><td style={tdStyle}>{results.tenure}</td></tr>
-                )}
-                {results.soldDate && (
-                  <tr><th style={thStyle}>Sold date</th><td style={tdStyle}>{results.soldDate}</td></tr>
-                )}
-                {results.soldPrice && (
-                  <tr><th style={thStyle}>Sold price</th><td style={tdStyle}>{toCurrency(Number(results.soldPrice))}</td></tr>
-                )}
-                {results.insurance && (
-                  <tr><th style={thStyle}>Insurance</th><td style={tdStyle}>{toCurrency(Number(results.insurance))}</td></tr>
-                )}
-                {results.comment && (
-                  <tr><th style={thStyle}>Comment/notes</th><td style={tdStyle}>{results.comment}</td></tr>
-                )}
-                <tr><th style={thStyle}>Stamp duty</th><td style={tdStyle}>{toCurrency(results.stampDuty)}</td></tr>
-                <tr><th style={thStyle}>Deposit</th><td style={tdStyle}>{toCurrency(results.deposit)}</td></tr>
-                <tr><th style={thStyle}>Repair costs</th><td style={tdStyle}>{toCurrency(results.repair)}</td></tr>
-                <tr><th style={thStyle}>Bank Fees</th><td style={tdStyle}>{toCurrency(results.fees)}</td></tr>
-                <tr><th style={thStyle}>Total investment</th><td style={tdStyle}>{toCurrency(results.totalInvestment)}</td></tr>
-                <tr><th style={thStyle}>Mortgage Amount</th><td style={tdStyle}>{toCurrency(results.mortgage)}</td></tr>
-                <tr><th style={thStyle}>LTV</th><td style={tdStyle}>{toPercent(results.ltv)}</td></tr>
-                <tr><th style={thStyle}>Rental cover</th><td style={{
-                  ...tdStyle,
-                  color: results.rentalCoverValue < 1.25
-                    ? 'red'
-                    : results.rentalCoverValue < 1.45
-                      ? '#ff9900'
-                      : 'green'
-                }}>{toPercent(results.rentalCoverValue)}</td></tr>
-                <tr><th style={thStyle}>Rent (p/m)</th><td style={tdStyle}>{toCurrency(results.rent)}</td></tr>
-                <tr><th style={thStyle}>Annual rent income</th><td style={tdStyle}>{toCurrency(results.annualRent)}</td></tr>
-                <tr><th style={thStyle}>{results.mortgageType === 'interestOnly' ? 'Mortgage interest only (p/m)' : 'Mortgage repayment (p/m)'}</th><td style={tdStyle}>{toCurrency(results.mortgageInterest)}</td></tr>
-                <tr><th style={thStyle}>Agency fee (p/m)</th><td style={tdStyle}>{toCurrency(results.agencyFee)}</td></tr>
-                <tr><th style={thStyle}>Additional monthly fees</th><td style={tdStyle}>{toCurrency(results.additionalFees)}</td></tr>
-                <tr><th style={thStyle}>Estimated value after 2 years</th><td style={tdStyle}>{toCurrency(results.valueAfter2Years)}</td></tr>
-                <tr><th style={thStyle}>Estimated value after 5 years</th><td style={tdStyle}>{toCurrency(results.valueAfter5Years)}</td></tr>
-                <tr><th style={thStyle}>Gross yield</th><td style={tdStyle}>{results.grossYield.toFixed(2)}%</td></tr>
-                <tr><th style={thStyle}>Net yield</th><td style={tdStyle}>{results.netYield.toFixed(2)}%</td></tr>
-                <tr><th style={thStyle}>ROI</th><td style={tdStyle}>{toPercent(results.roi)}</td></tr>
-                <tr><th style={{ ...thStyle, color: 'red' }}>Expenses (per month, estimated)</th><td style={{ ...tdStyle, color: 'red' }}>{toCurrency(results.monthlyExpenses)}</td></tr>
-                <tr><th style={{ ...thStyle, color: 'green' }}>Profit after all expenses (per month)</th><td style={{ ...tdStyle, color: 'green' }}>{toCurrency(results.monthlyNetProfit)}</td></tr>
-                <tr><th style={thStyle}>5-Year ROI</th><td style={tdStyle}>{typeof results.roi5Year === 'number' ? results.roi5Year.toFixed(2) + '%' : ''}</td></tr>
-                <tr><th style={thStyle}>5-Year Capital Gain</th><td style={tdStyle}>{typeof results.capitalGain === 'number' ? '£' + results.capitalGain.toLocaleString(undefined, { maximumFractionDigits: 2 }) : ''}</td></tr>
-              </tbody>
-            </table>
-            <div style={{ textAlign: 'right', marginTop: 16 }}>
-              <button type="button" style={buttonStyle} onClick={handleDownload}>Download Results</button>
+            {/* Modern Cards Layout */}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 24 }}>
+
+              {/* Property Details Card */}
+              <div style={{ background: '#fff', borderRadius: 16, padding: 24, boxShadow: '0 8px 32px rgba(0,0,0,0.08)', border: '1px solid rgba(0,0,0,0.05)' }}>
+                <h3 style={{ color: '#1a202c', fontSize: 18, fontWeight: 700, margin: 0, marginBottom: 20, display: 'flex', alignItems: 'center', gap: 8 }}>
+                  🏠 Property Details
+                </h3>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                  {results.dateAdded && (
+                    <>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <span style={{ color: '#4a5568', fontWeight: 500 }}>Date Added</span>
+                        <span style={{ fontWeight: 600, color: '#1a202c' }}>{results.dateAdded}</span>
+                      </div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <span style={{ color: '#4a5568', fontWeight: 500 }}>Days Since Added</span>
+                        <span style={{ fontWeight: 600, color: '#1a202c' }}>{Math.floor((Date.now() - new Date(results.dateAdded).getTime()) / (1000 * 60 * 60 * 24))}</span>
+                      </div>
+                    </>
+                  )}
+                  {results.numBeds && (
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <span style={{ color: '#4a5568', fontWeight: 500 }}>Bedrooms</span>
+                      <span style={{ fontWeight: 600, color: '#1a202c' }}>{results.numBeds}</span>
+                    </div>
+                  )}
+                  {results.tenure && (
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <span style={{ color: '#4a5568', fontWeight: 500 }}>Tenure</span>
+                      <span style={{ fontWeight: 600, color: '#1a202c' }}>{results.tenure}</span>
+                    </div>
+                  )}
+                  {results.link && (
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <span style={{ color: '#4a5568', fontWeight: 500 }}>RightMove Link</span>
+                      <a href={results.link} target="_blank" rel="noopener noreferrer" style={{ color: '#0070f3', textDecoration: 'none', fontWeight: 600 }}>
+                        View Property →
+                      </a>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Investment Summary Card */}
+              <div style={{ background: '#fff', borderRadius: 16, padding: 24, boxShadow: '0 8px 32px rgba(0,0,0,0.08)', border: '1px solid rgba(0,0,0,0.05)' }}>
+                <h3 style={{ color: '#1a202c', fontSize: 18, fontWeight: 700, margin: 0, marginBottom: 20, display: 'flex', alignItems: 'center', gap: 8 }}>
+                  💰 Investment Breakdown
+                </h3>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <span style={{ color: '#4a5568', fontWeight: 500 }}>Purchase Price</span>
+                    <span style={{ fontWeight: 700, color: '#1a202c', fontSize: 16 }}>{toCurrency(Number(purchase))}</span>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <span style={{ color: '#4a5568', fontWeight: 500 }}>Deposit</span>
+                    <span style={{ fontWeight: 600, color: '#1a202c' }}>{toCurrency(results.deposit)}</span>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <span style={{ color: '#4a5568', fontWeight: 500 }}>Stamp Duty</span>
+                    <span style={{ fontWeight: 600, color: '#1a202c' }}>{toCurrency(results.stampDuty)}</span>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <span style={{ color: '#4a5568', fontWeight: 500 }}>Bank Fees</span>
+                    <span style={{ fontWeight: 600, color: '#1a202c' }}>{toCurrency(results.fees)}</span>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <span style={{ color: '#4a5568', fontWeight: 500 }}>Repair Costs</span>
+                    <span style={{ fontWeight: 600, color: '#1a202c' }}>{toCurrency(results.repair)}</span>
+                  </div>
+                  <hr style={{ margin: '16px 0', border: 'none', borderTop: '2px solid #e2e8f0' }} />
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <span style={{ color: '#1a202c', fontWeight: 700, fontSize: 16 }}>Total Investment</span>
+                    <span style={{ fontWeight: 700, color: '#667eea', fontSize: 18 }}>{toCurrency(results.totalInvestment)}</span>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <span style={{ color: '#4a5568', fontWeight: 500 }}>Mortgage Amount</span>
+                    <span style={{ fontWeight: 600, color: '#1a202c' }}>{toCurrency(results.mortgage)}</span>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <span style={{ color: '#4a5568', fontWeight: 500 }}>LTV</span>
+                    <span style={{ fontWeight: 600, color: '#1a202c' }}>{toPercent(results.ltv)}</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Monthly Cash Flow Card */}
+              <div style={{ background: '#fff', borderRadius: 16, padding: 24, boxShadow: '0 8px 32px rgba(0,0,0,0.08)', border: '1px solid rgba(0,0,0,0.05)' }}>
+                <h3 style={{ color: '#1a202c', fontSize: 18, fontWeight: 700, margin: 0, marginBottom: 20, display: 'flex', alignItems: 'center', gap: 8 }}>
+                  📈 Monthly Cash Flow
+                </h3>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <span style={{ color: '#22c55e', fontWeight: 600 }}>Monthly Rent</span>
+                    <span style={{ fontWeight: 700, color: '#22c55e', fontSize: 16 }}>+{toCurrency(results.rent)}</span>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <span style={{ color: '#4a5568', fontWeight: 500 }}>Annual Rent Income</span>
+                    <span style={{ fontWeight: 600, color: '#22c55e' }}>{toCurrency(results.annualRent)}</span>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <span style={{ color: '#ef4444', fontWeight: 500 }}>{results.mortgageType === 'interestOnly' ? 'Mortgage Interest (p/m)' : 'Mortgage Payment (p/m)'}</span>
+                    <span style={{ fontWeight: 600, color: '#ef4444' }}>-{toCurrency(results.mortgageInterest)}</span>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <span style={{ color: '#ef4444', fontWeight: 500 }}>Agency Fee (p/m)</span>
+                    <span style={{ fontWeight: 600, color: '#ef4444' }}>-{toCurrency(results.agencyFee)}</span>
+                  </div>
+                  {results.insurance && (
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <span style={{ color: '#ef4444', fontWeight: 500 }}>Insurance</span>
+                      <span style={{ fontWeight: 600, color: '#ef4444' }}>-{toCurrency(Number(results.insurance))}</span>
+                    </div>
+                  )}
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <span style={{ color: '#ef4444', fontWeight: 500 }}>Additional Monthly Fees</span>
+                    <span style={{ fontWeight: 600, color: '#ef4444' }}>-{toCurrency(results.additionalFees)}</span>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <span style={{ color: '#ef4444', fontWeight: 500 }}>Estimated Expenses (p/m)</span>
+                    <span style={{ fontWeight: 600, color: '#ef4444' }}>-{toCurrency(results.monthlyExpenses)}</span>
+                  </div>
+                  <hr style={{ margin: '16px 0', border: 'none', borderTop: '2px solid #e2e8f0' }} />
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <span style={{ color: '#1a202c', fontWeight: 700, fontSize: 16 }}>Net Monthly Profit</span>
+                    <span style={{ 
+                      fontWeight: 700, 
+                      color: results.monthlyNetProfit >= 0 ? '#22c55e' : '#ef4444', 
+                      fontSize: 18 
+                    }}>
+                      {results.monthlyNetProfit >= 0 ? '+' : ''}{toCurrency(results.monthlyNetProfit)}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Key Metrics Card */}
+              <div style={{ background: '#fff', borderRadius: 16, padding: 24, boxShadow: '0 8px 32px rgba(0,0,0,0.08)', border: '1px solid rgba(0,0,0,0.05)' }}>
+                <h3 style={{ color: '#1a202c', fontSize: 18, fontWeight: 700, margin: 0, marginBottom: 20, display: 'flex', alignItems: 'center', gap: 8 }}>
+                  📊 Key Investment Metrics
+                </h3>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+                  <div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+                      <span style={{ color: '#4a5568', fontWeight: 500 }}>Gross Yield</span>
+                      <span style={{ fontWeight: 700, color: '#667eea', fontSize: 16 }}>{results.grossYield.toFixed(2)}%</span>
+                    </div>
+                    <div style={{ background: '#f1f5f9', borderRadius: 8, height: 6, overflow: 'hidden' }}>
+                      <div style={{ 
+                        background: results.grossYield >= 8 ? '#22c55e' : results.grossYield >= 6 ? '#f59e0b' : '#ef4444',
+                        height: '100%', 
+                        width: `${Math.min(results.grossYield * 2, 100)}%`,
+                        transition: 'width 0.5s ease'
+                      }} />
+                    </div>
+                  </div>
+                  
+                  <div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+                      <span style={{ color: '#4a5568', fontWeight: 500 }}>Net Yield</span>
+                      <span style={{ fontWeight: 700, color: '#8b5cf6', fontSize: 16 }}>{results.netYield.toFixed(2)}%</span>
+                    </div>
+                    <div style={{ background: '#f1f5f9', borderRadius: 8, height: 6, overflow: 'hidden' }}>
+                      <div style={{ 
+                        background: results.netYield >= 6 ? '#22c55e' : results.netYield >= 4 ? '#f59e0b' : '#ef4444',
+                        height: '100%', 
+                        width: `${Math.min(results.netYield * 3, 100)}%`,
+                        transition: 'width 0.5s ease'
+                      }} />
+                    </div>
+                  </div>
+
+                  <div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+                      <span style={{ color: '#4a5568', fontWeight: 500 }}>Rental Cover</span>
+                      <span style={{ 
+                        fontWeight: 700, 
+                        color: results.rentalCoverValue >= 1.45 ? '#22c55e' : results.rentalCoverValue >= 1.25 ? '#f59e0b' : '#ef4444',
+                        fontSize: 16 
+                      }}>
+                        {toPercent(results.rentalCoverValue)}
+                      </span>
+                    </div>
+                    <div style={{ background: '#f1f5f9', borderRadius: 8, height: 6, overflow: 'hidden' }}>
+                      <div style={{ 
+                        background: results.rentalCoverValue >= 1.45 ? '#22c55e' : results.rentalCoverValue >= 1.25 ? '#f59e0b' : '#ef4444',
+                        height: '100%', 
+                        width: `${Math.min(results.rentalCoverValue * 60, 100)}%`,
+                        transition: 'width 0.5s ease'
+                      }} />
+                    </div>
+                  </div>
+
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <span style={{ color: '#4a5568', fontWeight: 500 }}>ROI</span>
+                    <span style={{ fontWeight: 700, color: '#10b981', fontSize: 16 }}>{toPercent(results.roi)}</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Future Projections Card */}
+              <div style={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', borderRadius: 16, padding: 24, boxShadow: '0 8px 32px rgba(102,126,234,0.3)', color: '#fff' }}>
+                <h3 style={{ fontSize: 18, fontWeight: 700, margin: 0, marginBottom: 20, display: 'flex', alignItems: 'center', gap: 8 }}>
+                  🚀 Future Projections
+                </h3>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <span style={{ fontWeight: 500, opacity: 0.9 }}>Current Value</span>
+                    <span style={{ fontWeight: 700, fontSize: 16 }}>{toCurrency(Number(purchase))}</span>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <span style={{ fontWeight: 500, opacity: 0.9 }}>2-Year Value</span>
+                    <span style={{ fontWeight: 700, fontSize: 16 }}>{toCurrency(results.valueAfter2Years)}</span>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <span style={{ fontWeight: 500, opacity: 0.9 }}>5-Year Value</span>
+                    <span style={{ fontWeight: 700, fontSize: 16 }}>{toCurrency(results.valueAfter5Years)}</span>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <span style={{ fontWeight: 500, opacity: 0.9 }}>5-Year Capital Gain</span>
+                    <span style={{ fontWeight: 700, fontSize: 18, color: '#fbbf24' }}>
+                      {typeof results.capitalGain === 'number' ? '£' + results.capitalGain.toLocaleString(undefined, { maximumFractionDigits: 2 }) : ''}
+                    </span>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <span style={{ fontWeight: 500, opacity: 0.9 }}>5-Year ROI</span>
+                    <span style={{ fontWeight: 700, fontSize: 18, color: '#34d399' }}>
+                      {typeof results.roi5Year === 'number' ? results.roi5Year.toFixed(2) + '%' : ''}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Additional Details Card */}
+              {(results.soldDate || results.soldPrice || results.comment) && (
+                <div style={{ background: '#fff', borderRadius: 16, padding: 24, boxShadow: '0 8px 32px rgba(0,0,0,0.08)', border: '1px solid rgba(0,0,0,0.05)' }}>
+                  <h3 style={{ color: '#1a202c', fontSize: 18, fontWeight: 700, margin: 0, marginBottom: 20, display: 'flex', alignItems: 'center', gap: 8 }}>
+                    📝 Additional Details
+                  </h3>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                    {results.soldDate && (
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <span style={{ color: '#4a5568', fontWeight: 500 }}>Sold Date</span>
+                        <span style={{ fontWeight: 600, color: '#1a202c' }}>{results.soldDate}</span>
+                      </div>
+                    )}
+                    {results.soldPrice && (
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <span style={{ color: '#4a5568', fontWeight: 500 }}>Sold Price</span>
+                        <span style={{ fontWeight: 600, color: '#1a202c' }}>{toCurrency(Number(results.soldPrice))}</span>
+                      </div>
+                    )}
+                    {results.comment && (
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                        <span style={{ color: '#4a5568', fontWeight: 500 }}>Comments/Notes</span>
+                        <div style={{ background: '#f8fafc', padding: 12, borderRadius: 8, color: '#1a202c', fontSize: 14, lineHeight: 1.5 }}>
+                          {results.comment}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+            </div>
+            
+            {/* Download Button */}
+            <div style={{ textAlign: 'center' }}>
+              <button 
+                type="button" 
+                onClick={handleDownload}
+                style={{ 
+                  background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', 
+                  color: '#fff', 
+                  border: 'none', 
+                  borderRadius: 12, 
+                  padding: '16px 32px', 
+                  fontSize: 16, 
+                  fontWeight: 600, 
+                  cursor: 'pointer',
+                  boxShadow: '0 8px 24px rgba(102,126,234,0.3)',
+                  transition: 'all 0.2s'
+                }}
+              >
+                📥 Download Detailed Results
+              </button>
             </div>
           </div>
         )}

@@ -116,12 +116,43 @@ export async function POST(req: NextRequest) {
       agentAddress = $(".sidebar-contact-address").text().trim() || $(".agent-details__address").text().trim();
     }
 
-    // Images: filter for property images
+    // Images: enhanced extraction for property images
     const images: string[] = [];
-    $('img').each((_, el) => {
-      const src = $(el).attr('src');
-      if (src && /rightmove.*\/images\//.test(src)) images.push(src);
+    const seenImages = new Set<string>();
+    
+    // Try multiple selectors for property images
+    const imageSelectors = [
+      'img[src*="rightmove"]',
+      'img[src*="property"]', 
+      'img[src*="image"]',
+      '.gallery img',
+      '.property-carousel img',
+      '.property-gallery img',
+      '[class*="image"] img',
+      '[class*="photo"] img'
+    ];
+    
+    imageSelectors.forEach(selector => {
+      $(selector).each((_, el) => {
+        const src = $(el).attr('src') || $(el).attr('data-src') || $(el).attr('data-lazy');
+        if (src && !seenImages.has(src)) {
+          // Filter for actual property images (exclude icons, logos, etc)
+          if (src.includes('rightmove') && 
+              (src.includes('/images/') || src.includes('/property/') || src.includes('/media/')) &&
+              !src.includes('logo') && 
+              !src.includes('icon') &&
+              !src.includes('avatar') &&
+              src.length > 50) { // Ensure it's not a small icon
+            seenImages.add(src);
+            // Convert relative URLs to absolute
+            const imageUrl = src.startsWith('http') ? src : `https://media.rightmove.co.uk${src}`;
+            images.push(imageUrl);
+          }
+        }
+      });
     });
+    
+    console.log('Extracted images:', images.length, images.slice(0, 3));
 
     // Date Added
     let dateAdded = '';
