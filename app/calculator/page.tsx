@@ -1,6 +1,7 @@
 "use client";
 import Link from "next/link";
 import { useState } from "react";
+import NavigationBar from "@/components/NavigationBar";
 
 const toCurrency = (n: number | undefined | null) =>
   typeof n === "number" && !isNaN(n)
@@ -453,13 +454,7 @@ export default function Calculator() {
 
   return (
     <>
-      <style jsx>{`
-        @media (max-width: 768px) {
-          .sidebar { display: none !important; }
-          .main-content { padding: 16px 12px !important; padding-top: 80px !important; width: 100% !important; }
-          .mobile-header { display: block !important; }
-        }
-        
+      <style jsx>{`        
         .tooltip-container:hover .tooltip {
           opacity: 1 !important;
           visibility: visible !important;
@@ -473,156 +468,8 @@ export default function Calculator() {
       
       <div style={{ minHeight: '100vh', background: 'linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)', display: 'flex', color: '#000' }}>
         
-        {/* Mobile Header */}
-        <div className="mobile-header" style={{
-          position: 'fixed', top: 0, left: 0, right: 0,
-          background: 'rgba(255,255,255,0.98)', backdropFilter: 'blur(15px)',
-          padding: '12px 16px', borderBottom: '1px solid rgba(102,126,234,0.2)',
-          zIndex: 1000, display: 'none', boxShadow: '0 2px 20px rgba(0,0,0,0.1)'
-        }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <h1 style={{ 
-              fontSize: 18, 
-              fontWeight: 700, 
-              margin: 0, 
-              background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-              WebkitBackgroundClip: 'text',
-              WebkitTextFillColor: 'transparent'
-            }}>
-              🧮 Calculator
-            </h1>
-            <div style={{ 
-              display: 'flex', 
-              gap: 8,
-              background: 'rgba(102,126,234,0.1)',
-              borderRadius: 20,
-              padding: '6px 8px'
-            }}>
-              <Link href="/" style={{ 
-                color: '#666', 
-                textDecoration: 'none', 
-                fontSize: 11,
-                fontWeight: 500,
-                padding: '6px 10px',
-                borderRadius: 12,
-                transition: 'all 0.2s'
-              }}>
-                🏠
-              </Link>
-              <span style={{
-                color: '#fff',
-                fontSize: 11,
-                fontWeight: 600,
-                padding: '6px 10px',
-                borderRadius: 12,
-                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
-              }}>
-                🧮
-              </span>
-              <Link href="/checklist" style={{ 
-                color: '#666', 
-                textDecoration: 'none', 
-                fontSize: 11,
-                fontWeight: 500,
-                padding: '6px 10px',
-                borderRadius: 12,
-                transition: 'all 0.2s'
-              }}>
-                ✅
-              </Link>
-              <Link href="/property-search" style={{ 
-                color: '#666', 
-                textDecoration: 'none', 
-                fontSize: 11,
-                fontWeight: 500,
-                padding: '6px 10px',
-                borderRadius: 12,
-                transition: 'all 0.2s'
-              }}>
-                🔍
-              </Link>
-            </div>
-          </div>
-        </div>
+        <NavigationBar currentPage="Calculator" pageIcon="🧮" />
 
-        {/* Sidebar - Desktop only */}
-        <aside className="sidebar" style={{ 
-          width: 320, 
-          background: 'rgba(255,255,255,0.95)', 
-          backdropFilter: 'blur(10px)',
-          borderRight: '1px solid rgba(0,0,0,0.1)', 
-          minHeight: '100vh', 
-          padding: '40px 32px 32px 32px', 
-          display: 'flex', 
-          flexDirection: 'column', 
-          gap: 32, 
-          boxShadow: '4px 0 20px rgba(0,0,0,0.1)', 
-          color: '#000' 
-        }}>
-        <div>
-            <h1 style={{ fontSize: 28, fontWeight: 700, marginBottom: 8, background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
-              Deal Calculator
-            </h1>
-            <p style={{ color: '#666', fontSize: 14, marginBottom: 32 }}>Analyze your buy-to-let investments</p>
-            
-            <nav style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-              <Link href="/" style={{ 
-                color: '#666', 
-                textDecoration: 'none', 
-                fontSize: 14, 
-                padding: '12px 16px', 
-                borderRadius: 12, 
-                transition: 'all 0.2s',
-                display: 'flex',
-                alignItems: 'center',
-                gap: 8
-              }}>
-                🏠 Home
-              </Link>
-              <Link href="/calculator" style={{ 
-                color: '#fff', 
-                textDecoration: 'none', 
-                fontSize: 14, 
-                padding: '12px 16px', 
-                borderRadius: 12, 
-                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', 
-                fontWeight: 600,
-                boxShadow: '0 4px 15px rgba(102,126,234,0.3)',
-                display: 'flex',
-                alignItems: 'center',
-                gap: 8
-              }}>
-                🧮 Calculator
-              </Link>
-              <Link href="/checklist" style={{ 
-                color: '#666', 
-                textDecoration: 'none', 
-                fontSize: 14, 
-                padding: '12px 16px', 
-                borderRadius: 12, 
-                transition: 'all 0.2s',
-                display: 'flex',
-                alignItems: 'center',
-                gap: 8
-              }}>
-                ✅ Checklist
-              </Link>
-              <Link href="/property-search" style={{ 
-                color: '#666', 
-                textDecoration: 'none', 
-                fontSize: 14, 
-                padding: '12px 16px', 
-                borderRadius: 12, 
-                transition: 'all 0.2s',
-                display: 'flex',
-                alignItems: 'center',
-                gap: 8
-              }}>
-                🔍 Property Search
-              </Link>
-            </nav>
-        </div>
-      </aside>
       {/* Main content */}
       <div className="main-content" style={{ flex: 1, padding: '40px 0', display: 'flex', flexDirection: 'column', alignItems: 'center', color: '#000' }}>
         {/* Property Link Auto-Population Section */}

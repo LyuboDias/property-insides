@@ -1,6 +1,7 @@
 "use client";
 import Link from "next/link";
 import { useState, useEffect } from "react";
+import NavigationBar from "@/components/NavigationBar";
 
 const checklistTemplate = [
   // Section, Label, Type, Options, Note, Key
@@ -92,9 +93,6 @@ export default function Checklist() {
       <style jsx>{`
         /* Ultra-aggressive mobile override - highest specificity possible */
         @media screen and (max-width: 768px) {
-          .sidebar {
-            display: none !important;
-          }
           
           /* Nuclear option: Override everything with maximum specificity */
           html body div div div.checklist-item[style*="display"][style*="flex"] {
@@ -246,9 +244,6 @@ export default function Checklist() {
             word-break: break-word !important;
             box-sizing: border-box !important;
           }
-          .mobile-header {
-            display: block !important;
-          }
           .section-container {
             margin-bottom: 16px !important;
             padding: 16px 14px !important;
@@ -289,9 +284,6 @@ export default function Checklist() {
           }
         }
         @media (min-width: 769px) {
-          .mobile-header {
-            display: none !important;
-          }
           .main-content {
             padding-top: 40px !important;
           }
@@ -456,163 +448,8 @@ export default function Checklist() {
         color: '#000',
         overflowX: 'hidden' 
       }}>
-        {/* Mobile Header */}
-        <div className="mobile-header" style={{ 
-          position: 'fixed', 
-          top: 0, 
-          left: 0, 
-          right: 0, 
-          background: 'rgba(255,255,255,0.98)', 
-          backdropFilter: 'blur(15px)',
-          padding: '12px 16px', 
-          borderBottom: '1px solid rgba(102,126,234,0.2)',
-          zIndex: 1000,
-          display: 'none',
-          boxShadow: '0 2px 20px rgba(0,0,0,0.1)'
-        }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <h1 style={{ 
-              fontSize: 18, 
-              fontWeight: 700, 
-              margin: 0, 
-              background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-              WebkitBackgroundClip: 'text',
-              WebkitTextFillColor: 'transparent'
-            }}>
-              📋 Checklist
-            </h1>
-            <div style={{ 
-              display: 'flex', 
-              gap: 8,
-              background: 'rgba(102,126,234,0.1)',
-              borderRadius: 20,
-              padding: '6px 8px'
-            }}>
-              <Link href="/" style={{ 
-                color: '#666', 
-                textDecoration: 'none', 
-                fontSize: 11,
-                fontWeight: 500,
-                padding: '6px 10px',
-                borderRadius: 12,
-                transition: 'all 0.2s'
-              }}>
-                🏠
-              </Link>
-              <Link href="/calculator" style={{ 
-                color: '#666', 
-                textDecoration: 'none', 
-                fontSize: 11,
-                fontWeight: 500,
-                padding: '6px 10px',
-                borderRadius: 12,
-                transition: 'all 0.2s'
-              }}>
-                🧮
-              </Link>
-              <span style={{
-                color: '#fff',
-                fontSize: 11,
-                fontWeight: 600,
-                padding: '6px 10px',
-                borderRadius: 12,
-                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
-              }}>
-                ✅
-              </span>
-              <Link href="/property-search" style={{ 
-                color: '#666', 
-                textDecoration: 'none', 
-                fontSize: 11,
-                fontWeight: 500,
-                padding: '6px 10px',
-                borderRadius: 12,
-                transition: 'all 0.2s'
-              }}>
-                🔍
-              </Link>
-            </div>
-          </div>
-        </div>
+        <NavigationBar currentPage="Checklist" pageIcon="📋" />
 
-        {/* Sidebar - Desktop only */}
-        <aside className="sidebar" style={{ 
-          width: 320, 
-          background: 'rgba(255,255,255,0.95)', 
-          backdropFilter: 'blur(10px)',
-          borderRight: '1px solid rgba(0,0,0,0.1)', 
-          minHeight: '100vh', 
-          padding: '40px 32px 32px 32px', 
-          display: 'flex', 
-          flexDirection: 'column', 
-          gap: 32, 
-          boxShadow: '4px 0 20px rgba(0,0,0,0.1)', 
-          color: '#000' 
-        }}>
-        <div>
-            <h1 style={{ fontSize: 28, fontWeight: 700, marginBottom: 8, background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
-              Viewing Checklist
-            </h1>
-            <p style={{ color: '#666', fontSize: 14, marginBottom: 32 }}>Essential checks for property viewings</p>
-            
-            <nav style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-              <Link href="/" style={{ 
-                color: '#666', 
-                textDecoration: 'none', 
-                fontSize: 14, 
-                padding: '12px 16px', 
-                borderRadius: 12, 
-                transition: 'all 0.2s',
-                display: 'flex',
-                alignItems: 'center',
-                gap: 8
-              }}>
-                🏠 Home
-              </Link>
-              <Link href="/calculator" style={{ 
-                color: '#666', 
-                textDecoration: 'none', 
-                fontSize: 14, 
-                padding: '12px 16px', 
-                borderRadius: 12, 
-                transition: 'all 0.2s',
-                display: 'flex',
-                alignItems: 'center',
-                gap: 8
-              }}>
-                🧮 Calculator
-              </Link>
-              <Link href="/checklist" style={{ 
-                color: '#fff', 
-                textDecoration: 'none', 
-                fontSize: 14, 
-                padding: '12px 16px', 
-                borderRadius: 12, 
-                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', 
-                fontWeight: 600,
-                boxShadow: '0 4px 15px rgba(102,126,234,0.3)',
-                display: 'flex',
-                alignItems: 'center',
-                gap: 8
-              }}>
-                ✅ Checklist
-              </Link>
-              <Link href="/property-search" style={{ 
-                color: '#666', 
-                textDecoration: 'none', 
-                fontSize: 14, 
-                padding: '12px 16px', 
-                borderRadius: 12, 
-                transition: 'all 0.2s',
-                display: 'flex',
-                alignItems: 'center',
-                gap: 8
-              }}>
-                🔍 Property Search
-              </Link>
-            </nav>
-        </div>
-      </aside>
 
       {/* Main content */}
         <div className="main-content" style={{ 
