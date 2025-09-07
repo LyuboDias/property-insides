@@ -550,6 +550,30 @@ export default function Home() {
             </button>
           </Link>
         </div>
+
+        {/* Data Sources Attribution */}
+        <div style={{ 
+          marginTop: 48, 
+          paddingTop: 24, 
+          borderTop: '1px solid rgba(0,0,0,0.1)', 
+          textAlign: 'center' 
+        }}>
+          <div style={{ fontSize: 10, color: '#9ca3af', lineHeight: 1.4, maxWidth: 800, margin: '0 auto' }}>
+            <div style={{ fontWeight: 600, marginBottom: 8 }}>Data Sources</div>
+            <div style={{ marginBottom: 4 }}>
+              <strong>Market Data:</strong> RightMove, Zoopla, ONS, Gov.UK, Property Investment Project, Rental Market Intelligence
+            </div>
+            <div style={{ marginBottom: 4 }}>
+              <strong>Regional Analysis:</strong> Hometrack, JLL, Knight Frank, Savills, Local Authority Housing Data
+            </div>
+            <div>
+              <strong>Rental Yields:</strong> SpareRoom, OpenRent, Property118, Buy-to-Let Mortgage Lenders Association
+            </div>
+            <div style={{ marginTop: 8, fontSize: 9, fontStyle: 'italic' }}>
+              All data aggregated from publicly available sources. Property Insides does not guarantee accuracy of third-party data.
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );

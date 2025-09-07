@@ -691,6 +691,33 @@ export default function DeveloperTools() {
             💎 Live BMV Data
           </button>
         </div>
+
+        {/* Data Sources Attribution */}
+        <div style={{ 
+          marginTop: 48, 
+          paddingTop: 24, 
+          borderTop: '1px solid rgba(0,0,0,0.1)', 
+          textAlign: 'center' 
+        }}>
+          <div style={{ fontSize: 10, color: '#9ca3af', lineHeight: 1.4, maxWidth: 900, margin: '0 auto' }}>
+            <div style={{ fontWeight: 600, marginBottom: 8 }}>Data Sources</div>
+            <div style={{ marginBottom: 4 }}>
+              <strong>Construction Costs:</strong> HomeBuilding.co.uk, Real-Homes.com, Which.co.uk, BuildStore.co.uk, Construction Enquirer
+            </div>
+            <div style={{ marginBottom: 4 }}>
+              <strong>BMV Opportunities:</strong> Property Auctions, Barnard Marcus Auctions, SVA Auctions, Zoopla, RightMove, Probate Specialists
+            </div>
+            <div style={{ marginBottom: 4 }}>
+              <strong>Planning Data:</strong> Gov.UK, Planning Portal, Planning.data.gov.uk, Local Authority Databases
+            </div>
+            <div>
+              <strong>Market Analysis:</strong> ONS, Land Registry, RICS, Property Hub, Track Capital, Pure Investor
+            </div>
+            <div style={{ marginTop: 8, fontSize: 9, fontStyle: 'italic' }}>
+              All data aggregated from publicly available sources. Construction costs and planning success rates are estimates based on historical data. Property Insides does not guarantee accuracy of third-party data.
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );
