@@ -615,8 +615,641 @@ export default function PropertySearch() {
             </div>
           </div>
         )}
+
+        {/* Enhanced Property Search System */}
+        <div style={{
+          marginTop: 80,
+          paddingTop: 40,
+          borderTop: '2px solid rgba(102,126,234,0.3)',
+          background: 'linear-gradient(135deg, rgba(102,126,234,0.05) 0%, rgba(118,75,162,0.05) 100%)'
+        }}>
+          <EnhancedPropertySearch />
+        </div>
+
       </main>
     </div>
     </>
+  );
+}
+
+// Enhanced Property Search Component
+function EnhancedPropertySearch() {
+  // Enhanced search state
+  const [enhancedFilters, setEnhancedFilters] = useState({
+    location: "",
+    minPrice: "",
+    maxPrice: "",
+    minBedrooms: "",
+    maxBedrooms: "",
+    radius: "5",
+    propertyTypes: [] as string[],
+    excludeRetirement: true,
+    excludeBuyingSchemes: true,
+    excludeNewHomes: true,
+    mustHaveGarden: false,
+    mustHaveParking: false
+  });
+
+  const [enhancedResults, setEnhancedResults] = useState<any[]>([]);
+  const [enhancedLoading, setEnhancedLoading] = useState(false);
+  const [enhancedError, setEnhancedError] = useState("");
+  const [searchSummary, setSearchSummary] = useState<any>(null);
+  const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
+
+  const propertyTypeOptions = [
+    { id: 'detached', label: 'Detached Houses', icon: '🏠' },
+    { id: 'semi-detached', label: 'Semi-Detached', icon: '🏘️' },
+    { id: 'terraced', label: 'Terraced Houses', icon: '🏠' },
+  ];
+
+  const handleEnhancedSearch = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!enhancedFilters.location.trim()) {
+      setEnhancedError("Please enter a location");
+      return;
+    }
+
+    if (enhancedFilters.propertyTypes.length === 0) {
+      setEnhancedError("Please select at least one property type");
+      return;
+    }
+
+    setEnhancedLoading(true);
+    setEnhancedError("");
+    setEnhancedResults([]);
+
+    try {
+      console.log('🔍 Starting Enhanced Multi-Source Search...');
+      
+      const searchParams = {
+        ...enhancedFilters,
+        minPrice: enhancedFilters.minPrice ? parseInt(enhancedFilters.minPrice) : undefined,
+        maxPrice: enhancedFilters.maxPrice ? parseInt(enhancedFilters.maxPrice) : undefined,
+        minBedrooms: enhancedFilters.minBedrooms ? parseInt(enhancedFilters.minBedrooms) : undefined,
+        maxBedrooms: enhancedFilters.maxBedrooms ? parseInt(enhancedFilters.maxBedrooms) : undefined,
+        radius: parseInt(enhancedFilters.radius)
+      };
+
+      console.log('Enhanced search params:', searchParams);
+
+      const response = await fetch('/api/enhanced-search', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(searchParams),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Enhanced search failed');
+      }
+
+      console.log('Enhanced search results:', data);
+      setEnhancedResults(data.properties);
+      setSearchSummary(data.summary);
+
+    } catch (error: any) {
+      console.error('Enhanced search error:', error);
+      setEnhancedError(error.message || 'Search failed. Please try again.');
+    } finally {
+      setEnhancedLoading(false);
+    }
+  };
+
+  const handlePropertyTypeToggle = (typeId: string) => {
+    setEnhancedFilters(prev => ({
+      ...prev,
+      propertyTypes: prev.propertyTypes.includes(typeId)
+        ? prev.propertyTypes.filter(t => t !== typeId)
+        : [...prev.propertyTypes, typeId]
+    }));
+  };
+
+  return (
+    <div style={{ padding: '32px', maxWidth: 1200, margin: '0 auto' }}>
+      {/* Enhanced Search Header */}
+      <div style={{ textAlign: 'center', marginBottom: 32 }}>
+        <h2 style={{
+          fontSize: 28,
+          fontWeight: 700,
+          background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+          WebkitBackgroundClip: 'text',
+          WebkitTextFillColor: 'transparent',
+          margin: '0 0 8px 0'
+        }}>
+          🚀 Enhanced Property Search
+        </h2>
+        <p style={{ color: '#6b7280', fontSize: 16, margin: 0 }}>
+          Multi-source property search with advanced filtering and investment insights
+        </p>
+      </div>
+
+      {/* Enhanced Search Form */}
+      <form onSubmit={handleEnhancedSearch} style={{
+        background: 'rgba(255,255,255,0.95)',
+        backdropFilter: 'blur(10px)',
+        borderRadius: 16,
+        padding: 32,
+        boxShadow: '0 8px 30px rgba(0,0,0,0.12)',
+        border: '1px solid rgba(255,255,255,0.2)',
+        marginBottom: 32
+      }}>
+        
+        {/* Primary Search Fields */}
+        <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr 1fr', gap: 20, marginBottom: 24 }}>
+          <div>
+            <label style={{ display: 'block', fontSize: 14, fontWeight: 600, marginBottom: 8, color: '#374151' }}>
+              📍 Location *
+            </label>
+            <input
+              type="text"
+              value={enhancedFilters.location}
+              onChange={(e) => setEnhancedFilters(prev => ({ ...prev, location: e.target.value }))}
+              placeholder="e.g. Manchester, M1 1AA, or postcode"
+              style={{
+                width: '100%',
+                padding: '12px 16px',
+                border: '2px solid #e5e7eb',
+                borderRadius: 8,
+                fontSize: 14,
+                background: '#fff',
+                color: '#000'
+              }}
+              required
+            />
+          </div>
+
+          <div>
+            <label style={{ display: 'block', fontSize: 14, fontWeight: 600, marginBottom: 8, color: '#374151' }}>
+              📏 Search Radius
+            </label>
+            <select
+              value={enhancedFilters.radius}
+              onChange={(e) => setEnhancedFilters(prev => ({ ...prev, radius: e.target.value }))}
+              style={{
+                width: '100%',
+                padding: '12px 16px',
+                border: '2px solid #e5e7eb',
+                borderRadius: 8,
+                fontSize: 14,
+                background: '#fff',
+                color: '#000'
+              }}
+            >
+              <option value="1">1 mile</option>
+              <option value="3">3 miles</option>
+              <option value="5">5 miles</option>
+              <option value="10">10 miles</option>
+              <option value="15">15 miles</option>
+              <option value="20">20 miles</option>
+            </select>
+          </div>
+
+          <div>
+            <label style={{ display: 'block', fontSize: 14, fontWeight: 600, marginBottom: 8, color: '#374151' }}>
+              💰 Min Price
+            </label>
+            <input
+              type="number"
+              value={enhancedFilters.minPrice}
+              onChange={(e) => setEnhancedFilters(prev => ({ ...prev, minPrice: e.target.value }))}
+              placeholder="50000"
+              style={{
+                width: '100%',
+                padding: '12px 16px',
+                border: '2px solid #e5e7eb',
+                borderRadius: 8,
+                fontSize: 14,
+                background: '#fff',
+                color: '#000'
+              }}
+            />
+          </div>
+
+          <div>
+            <label style={{ display: 'block', fontSize: 14, fontWeight: 600, marginBottom: 8, color: '#374151' }}>
+              💰 Max Price
+            </label>
+            <input
+              type="number"
+              value={enhancedFilters.maxPrice}
+              onChange={(e) => setEnhancedFilters(prev => ({ ...prev, maxPrice: e.target.value }))}
+              placeholder="500000"
+              style={{
+                width: '100%',
+                padding: '12px 16px',
+                border: '2px solid #e5e7eb',
+                borderRadius: 8,
+                fontSize: 14,
+                background: '#fff',
+                color: '#000'
+              }}
+            />
+          </div>
+        </div>
+
+        {/* Bedroom Range */}
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20, marginBottom: 24 }}>
+          <div>
+            <label style={{ display: 'block', fontSize: 14, fontWeight: 600, marginBottom: 8, color: '#374151' }}>
+              🛏️ Min Bedrooms
+            </label>
+            <select
+              value={enhancedFilters.minBedrooms}
+              onChange={(e) => setEnhancedFilters(prev => ({ ...prev, minBedrooms: e.target.value }))}
+              style={{
+                width: '100%',
+                padding: '12px 16px',
+                border: '2px solid #e5e7eb',
+                borderRadius: 8,
+                fontSize: 14,
+                background: '#fff',
+                color: '#000'
+              }}
+            >
+              <option value="">Any</option>
+              <option value="1">1+</option>
+              <option value="2">2+</option>
+              <option value="3">3+</option>
+              <option value="4">4+</option>
+              <option value="5">5+</option>
+            </select>
+          </div>
+
+          <div>
+            <label style={{ display: 'block', fontSize: 14, fontWeight: 600, marginBottom: 8, color: '#374151' }}>
+              🛏️ Max Bedrooms
+            </label>
+            <select
+              value={enhancedFilters.maxBedrooms}
+              onChange={(e) => setEnhancedFilters(prev => ({ ...prev, maxBedrooms: e.target.value }))}
+              style={{
+                width: '100%',
+                padding: '12px 16px',
+                border: '2px solid #e5e7eb',
+                borderRadius: 8,
+                fontSize: 14,
+                background: '#fff',
+                color: '#000'
+              }}
+            >
+              <option value="">Any</option>
+              <option value="2">Up to 2</option>
+              <option value="3">Up to 3</option>
+              <option value="4">Up to 4</option>
+              <option value="5">Up to 5</option>
+              <option value="6">Up to 6</option>
+            </select>
+          </div>
+        </div>
+
+        {/* Property Types */}
+        <div style={{ marginBottom: 24 }}>
+          <label style={{ display: 'block', fontSize: 14, fontWeight: 600, marginBottom: 12, color: '#374151' }}>
+            🏠 Property Types (Houses Only) *
+          </label>
+          <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
+            {propertyTypeOptions.map((type) => (
+              <button
+                key={type.id}
+                type="button"
+                onClick={() => handlePropertyTypeToggle(type.id)}
+                style={{
+                  padding: '12px 20px',
+                  border: `2px solid ${enhancedFilters.propertyTypes.includes(type.id) ? '#10b981' : '#e5e7eb'}`,
+                  borderRadius: 8,
+                  background: enhancedFilters.propertyTypes.includes(type.id) ? '#10b981' : '#fff',
+                  color: enhancedFilters.propertyTypes.includes(type.id) ? '#fff' : '#374151',
+                  fontSize: 14,
+                  fontWeight: 500,
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 8
+                }}
+              >
+                <span>{type.icon}</span>
+                {type.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Exclusion Filters */}
+        <div style={{ marginBottom: 24 }}>
+          <label style={{ display: 'block', fontSize: 14, fontWeight: 600, marginBottom: 12, color: '#374151' }}>
+            🚫 Exclude Properties
+          </label>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 16 }}>
+            {[
+              { key: 'excludeRetirement', label: 'Retirement Properties', icon: '👴' },
+              { key: 'excludeBuyingSchemes', label: 'Buying Schemes', icon: '🤝' },
+              { key: 'excludeNewHomes', label: 'New Builds', icon: '🏗️' }
+            ].map((exclusion) => (
+              <label key={exclusion.key} style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer' }}>
+                <input
+                  type="checkbox"
+                  checked={enhancedFilters[exclusion.key as keyof typeof enhancedFilters] as boolean}
+                  onChange={(e) => setEnhancedFilters(prev => ({
+                    ...prev,
+                    [exclusion.key]: e.target.checked
+                  }))}
+                  style={{ width: 16, height: 16 }}
+                />
+                <span style={{ fontSize: 14, color: '#374151' }}>
+                  {exclusion.icon} {exclusion.label}
+                </span>
+              </label>
+            ))}
+          </div>
+        </div>
+
+        {/* Advanced Filters Toggle */}
+        <div style={{ marginBottom: 24 }}>
+          <button
+            type="button"
+            onClick={() => setShowAdvancedFilters(!showAdvancedFilters)}
+            style={{
+              background: 'transparent',
+              border: 'none',
+              color: '#667eea',
+              fontSize: 14,
+              fontWeight: 500,
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: 8
+            }}
+          >
+            {showAdvancedFilters ? '▼' : '▶'} Advanced Filters
+          </button>
+
+          {showAdvancedFilters && (
+            <div style={{ marginTop: 16, padding: 20, background: 'rgba(102,126,234,0.05)', borderRadius: 8 }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+                <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer' }}>
+                  <input
+                    type="checkbox"
+                    checked={enhancedFilters.mustHaveGarden}
+                    onChange={(e) => setEnhancedFilters(prev => ({ ...prev, mustHaveGarden: e.target.checked }))}
+                    style={{ width: 16, height: 16 }}
+                  />
+                  <span style={{ fontSize: 14, color: '#374151' }}>🌳 Must Have Garden</span>
+                </label>
+
+                <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer' }}>
+                  <input
+                    type="checkbox"
+                    checked={enhancedFilters.mustHaveParking}
+                    onChange={(e) => setEnhancedFilters(prev => ({ ...prev, mustHaveParking: e.target.checked }))}
+                    style={{ width: 16, height: 16 }}
+                  />
+                  <span style={{ fontSize: 14, color: '#374151' }}>🚗 Must Have Parking</span>
+                </label>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Error Display */}
+        {enhancedError && (
+          <div style={{
+            padding: 12,
+            background: 'rgba(239,68,68,0.1)',
+            color: '#dc2626',
+            borderRadius: 8,
+            fontSize: 14,
+            marginBottom: 20,
+            border: '1px solid rgba(239,68,68,0.2)'
+          }}>
+            ⚠️ {enhancedError}
+          </div>
+        )}
+
+        {/* Search Button */}
+        <div style={{ textAlign: 'center' }}>
+          <button
+            type="submit"
+            disabled={enhancedLoading}
+            style={{
+              background: enhancedLoading 
+                ? '#9ca3af' 
+                : 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+              color: '#fff',
+              border: 'none',
+              borderRadius: 12,
+              padding: '16px 48px',
+              fontSize: 16,
+              fontWeight: 600,
+              cursor: enhancedLoading ? 'not-allowed' : 'pointer',
+              boxShadow: enhancedLoading ? 'none' : '0 4px 15px rgba(16,185,129,0.3)',
+              transition: 'all 0.2s ease'
+            }}
+          >
+            {enhancedLoading ? (
+              <>
+                <span style={{ marginRight: 8 }}>🔄</span>
+                Searching Multiple Sources...
+              </>
+            ) : (
+              <>
+                <span style={{ marginRight: 8 }}>🚀</span>
+                Search Properties
+              </>
+            )}
+          </button>
+        </div>
+      </form>
+
+      {/* Search Summary */}
+      {searchSummary && (
+        <div style={{
+          background: 'rgba(16,185,129,0.1)',
+          borderRadius: 12,
+          padding: 24,
+          marginBottom: 32,
+          border: '1px solid rgba(16,185,129,0.2)'
+        }}>
+          <h3 style={{ fontSize: 18, fontWeight: 600, margin: '0 0 16px 0', color: '#059669' }}>
+            🎯 Search Results Summary
+          </h3>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 16, fontSize: 14 }}>
+            <div>
+              <div style={{ color: '#6b7280' }}>Total Properties Found</div>
+              <div style={{ fontSize: 20, fontWeight: 700, color: '#059669' }}>{searchSummary.totalProperties}</div>
+            </div>
+            <div>
+              <div style={{ color: '#6b7280' }}>Sources Searched</div>
+              <div style={{ fontSize: 16, fontWeight: 600, color: '#374151' }}>{searchSummary.sourcesSearched?.join(', ')}</div>
+            </div>
+            <div>
+              <div style={{ color: '#6b7280' }}>Properties Excluded</div>
+              <div style={{ fontSize: 16, fontWeight: 600, color: '#ef4444' }}>{searchSummary.propertiesExcluded || 0}</div>
+            </div>
+            <div>
+              <div style={{ color: '#6b7280' }}>Average Price</div>
+              <div style={{ fontSize: 16, fontWeight: 600, color: '#374151' }}>£{searchSummary.averagePrice?.toLocaleString()}</div>
+            </div>
+          </div>
+          
+          {/* Demo Data Notice */}
+          {enhancedResults.some((p: any) => p.isDemoData) && (
+            <div style={{ 
+              marginTop: 16, 
+              padding: 12, 
+              background: 'rgba(245,158,11,0.1)', 
+              borderRadius: 8,
+              border: '1px solid rgba(245,158,11,0.3)'
+            }}>
+              <div style={{ fontSize: 13, color: '#d97706', fontWeight: 600 }}>
+                🔧 Demo Mode: Some property sources are currently showing sample data while we improve scraping reliability.
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Enhanced Results */}
+      {enhancedResults.length > 0 && (
+        <div>
+          <h3 style={{ fontSize: 20, fontWeight: 600, marginBottom: 20, color: '#374151' }}>
+            🏠 Properties Found ({enhancedResults.length})
+          </h3>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(350px, 1fr))', gap: 20 }}>
+            {enhancedResults.map((property, index) => (
+              <div key={index} style={{
+                background: 'rgba(255,255,255,0.95)',
+                borderRadius: 12,
+                padding: 20,
+                boxShadow: '0 4px 15px rgba(0,0,0,0.1)',
+                border: '1px solid rgba(0,0,0,0.1)'
+              }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 12 }}>
+                  <h4 style={{ fontSize: 16, fontWeight: 600, margin: 0, color: '#374151' }}>
+                    {property.address}
+                  </h4>
+                  <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+                    {property.isDemoData && (
+                      <div style={{
+                        background: '#f59e0b',
+                        color: '#fff',
+                        padding: '2px 6px',
+                        borderRadius: 4,
+                        fontSize: 9,
+                        fontWeight: 600
+                      }}>
+                        DEMO
+                      </div>
+                    )}
+                    <div style={{ 
+                      background: property.source === 'rightmove' ? '#ff6b35' : property.source === 'zoopla' ? '#1f4776' : '#10b981',
+                      color: '#fff',
+                      padding: '4px 8px',
+                      borderRadius: 6,
+                      fontSize: 10,
+                      fontWeight: 600,
+                      textTransform: 'uppercase'
+                    }}>
+                      {property.source}
+                    </div>
+                  </div>
+                </div>
+                
+                <div style={{ fontSize: 18, fontWeight: 700, color: '#10b981', marginBottom: 8 }}>
+                  £{property.price?.toLocaleString()}
+                </div>
+                
+                <div style={{ display: 'flex', gap: 16, fontSize: 13, color: '#6b7280', marginBottom: 12 }}>
+                  <span>🛏️ {property.bedrooms} bed</span>
+                  <span>🏠 {property.propertyType}</span>
+                  {property.estimatedYield && (
+                    <span style={{ color: '#10b981', fontWeight: 600 }}>
+                      📈 {property.estimatedYield}% yield
+                    </span>
+                  )}
+                </div>
+                
+                {property.description && (
+                  <p style={{ fontSize: 13, color: '#6b7280', lineHeight: 1.4, margin: '0 0 12px 0' }}>
+                    {property.description.substring(0, 120)}...
+                  </p>
+                )}
+                
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <div style={{ fontSize: 12, color: '#9ca3af' }}>
+                    {property.daysOnMarket && `${property.daysOnMarket} days on market`}
+                  </div>
+                  {property.link && (
+                    <a 
+                      href={property.link} 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      style={{
+                        background: '#667eea',
+                        color: '#fff',
+                        padding: '8px 16px',
+                        borderRadius: 6,
+                        fontSize: 12,
+                        fontWeight: 600,
+                        textDecoration: 'none'
+                      }}
+                    >
+                      View Details
+                    </a>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* No Results Message */}
+      {!enhancedLoading && enhancedResults.length === 0 && searchSummary && (
+        <div style={{
+          textAlign: 'center',
+          padding: 40,
+          background: 'rgba(245,158,11,0.1)',
+          borderRadius: 12,
+          border: '1px solid rgba(245,158,11,0.2)'
+        }}>
+          <div style={{ fontSize: 48, marginBottom: 16 }}>🔍</div>
+          <h3 style={{ fontSize: 18, fontWeight: 600, margin: '0 0 8px 0', color: '#d97706' }}>
+            No Properties Found
+          </h3>
+          <p style={{ color: '#6b7280', fontSize: 14 }}>
+            Try expanding your search criteria or adjusting your filters
+          </p>
+        </div>
+      )}
+
+      {/* Data Sources Attribution */}
+      <div style={{ 
+        marginTop: 48, 
+        paddingTop: 24, 
+        borderTop: '1px solid rgba(0,0,0,0.1)', 
+        textAlign: 'center' 
+      }}>
+        <div style={{ fontSize: 10, color: '#9ca3af', lineHeight: 1.4, maxWidth: 900, margin: '0 auto' }}>
+          <div style={{ fontWeight: 600, marginBottom: 8 }}>Enhanced Search Data Sources</div>
+          <div style={{ marginBottom: 4 }}>
+            <strong>Property Listings:</strong> RightMove, Zoopla, OnTheMarket, PrimeLocation
+          </div>
+          <div style={{ marginBottom: 4 }}>
+            <strong>Investment Data:</strong> Rental yield estimates, Property price analysis, Investment scoring algorithms
+          </div>
+          <div>
+            <strong>Filtering:</strong> Advanced exclusion patterns, Property type classification, Location-based analysis
+          </div>
+          <div style={{ marginTop: 8, fontSize: 9, fontStyle: 'italic' }}>
+            Multi-source property search with intelligent deduplication and investment metrics. Property Insides does not guarantee accuracy of third-party data.
+          </div>
+        </div>
+      </div>
+    </div>
   );
 }
