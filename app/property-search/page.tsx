@@ -137,34 +137,172 @@ export default function PropertySearch() {
   };
 
   return (
-    <div style={{ minHeight: '100vh', background: '#f4f6fa', display: 'flex', color: '#000' }}>
-      {/* Sidebar */}
-      <aside style={{ width: 320, background: '#fff', borderRight: '1px solid #e5e7eb', minHeight: '100vh', padding: '40px 32px 32px 32px', display: 'flex', flexDirection: 'column', gap: 32, boxShadow: '2px 0 8px rgba(0,0,0,0.04)', color: '#000' }}>
-        <div>
-          <h1 style={{ fontSize: 28, fontWeight: 700, marginBottom: 8 }}>Property Search</h1>
-          <p style={{ color: '#666', fontSize: 14, marginBottom: 32 }}>Find your perfect property investment</p>
-          
-          <nav style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-            <Link href="/" style={{ color: '#666', textDecoration: 'none', fontSize: 14, padding: '8px 12px', borderRadius: 6, transition: 'all 0.2s' }}>
-              🏠 Home
-            </Link>
-            <Link href="/calculator" style={{ color: '#666', textDecoration: 'none', fontSize: 14, padding: '8px 12px', borderRadius: 6, transition: 'all 0.2s' }}>
-              🧮 Calculator
-            </Link>
-            <Link href="/checklist" style={{ color: '#666', textDecoration: 'none', fontSize: 14, padding: '8px 12px', borderRadius: 6, transition: 'all 0.2s' }}>
-              ✅ Checklist
-            </Link>
-            <Link href="/property-search" style={{ color: '#0070f3', textDecoration: 'none', fontSize: 14, padding: '8px 12px', borderRadius: 6, background: '#f0f8ff', fontWeight: 500 }}>
+    <>
+      <style jsx>{`
+        @media (max-width: 768px) {
+          .sidebar { display: none !important; }
+          .main-content { padding: 16px 12px !important; padding-top: 80px !important; width: 100% !important; }
+          .mobile-header { display: block !important; }
+        }
+      `}</style>
+      
+      <div style={{ minHeight: '100vh', background: 'linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)', display: 'flex', color: '#000' }}>
+        
+        {/* Mobile Header */}
+        <div className="mobile-header" style={{
+          position: 'fixed', top: 0, left: 0, right: 0,
+          background: 'rgba(255,255,255,0.98)', backdropFilter: 'blur(15px)',
+          padding: '12px 16px', borderBottom: '1px solid rgba(102,126,234,0.2)',
+          zIndex: 1000, display: 'none', boxShadow: '0 2px 20px rgba(0,0,0,0.1)'
+        }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <h1 style={{ 
+              fontSize: 18, 
+              fontWeight: 700, 
+              margin: 0, 
+              background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent'
+            }}>
               🔍 Property Search
-            </Link>
-          </nav>
+            </h1>
+            <div style={{ 
+              display: 'flex', 
+              gap: 8,
+              background: 'rgba(102,126,234,0.1)',
+              borderRadius: 20,
+              padding: '6px 8px'
+            }}>
+              <Link href="/" style={{ 
+                color: '#666', 
+                textDecoration: 'none', 
+                fontSize: 11,
+                fontWeight: 500,
+                padding: '6px 10px',
+                borderRadius: 12,
+                transition: 'all 0.2s'
+              }}>
+                🏠
+              </Link>
+              <Link href="/calculator" style={{ 
+                color: '#666', 
+                textDecoration: 'none', 
+                fontSize: 11,
+                fontWeight: 500,
+                padding: '6px 10px',
+                borderRadius: 12,
+                transition: 'all 0.2s'
+              }}>
+                🧮
+              </Link>
+              <Link href="/checklist" style={{ 
+                color: '#666', 
+                textDecoration: 'none', 
+                fontSize: 11,
+                fontWeight: 500,
+                padding: '6px 10px',
+                borderRadius: 12,
+                transition: 'all 0.2s'
+              }}>
+                ✅
+              </Link>
+              <span style={{
+                color: '#fff',
+                fontSize: 11,
+                fontWeight: 600,
+                padding: '6px 10px',
+                borderRadius: 12,
+                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
+              }}>
+                🔍
+              </span>
+            </div>
+          </div>
+        </div>
+
+        {/* Sidebar - Desktop only */}
+        <aside className="sidebar" style={{ 
+          width: 320, 
+          background: 'rgba(255,255,255,0.95)', 
+          backdropFilter: 'blur(10px)',
+          borderRight: '1px solid rgba(0,0,0,0.1)', 
+          minHeight: '100vh', 
+          padding: '40px 32px 32px 32px', 
+          display: 'flex', 
+          flexDirection: 'column', 
+          gap: 32, 
+          boxShadow: '4px 0 20px rgba(0,0,0,0.1)', 
+          color: '#000' 
+        }}>
+        <div>
+            <h1 style={{ fontSize: 28, fontWeight: 700, marginBottom: 8, background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
+              Property Search
+            </h1>
+            <p style={{ color: '#666', fontSize: 14, marginBottom: 32 }}>Find your perfect property investment</p>
+            
+            <nav style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+              <Link href="/" style={{ 
+                color: '#666', 
+                textDecoration: 'none', 
+                fontSize: 14, 
+                padding: '12px 16px', 
+                borderRadius: 12, 
+                transition: 'all 0.2s',
+                display: 'flex',
+                alignItems: 'center',
+                gap: 8
+              }}>
+                🏠 Home
+              </Link>
+              <Link href="/calculator" style={{ 
+                color: '#666', 
+                textDecoration: 'none', 
+                fontSize: 14, 
+                padding: '12px 16px', 
+                borderRadius: 12, 
+                transition: 'all 0.2s',
+                display: 'flex',
+                alignItems: 'center',
+                gap: 8
+              }}>
+                🧮 Calculator
+              </Link>
+              <Link href="/checklist" style={{ 
+                color: '#666', 
+                textDecoration: 'none', 
+                fontSize: 14, 
+                padding: '12px 16px', 
+                borderRadius: 12, 
+                transition: 'all 0.2s',
+                display: 'flex',
+                alignItems: 'center',
+                gap: 8
+              }}>
+                ✅ Checklist
+              </Link>
+              <Link href="/property-search" style={{ 
+                color: '#fff', 
+                textDecoration: 'none', 
+                fontSize: 14, 
+                padding: '12px 16px', 
+                borderRadius: 12, 
+                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', 
+                fontWeight: 600,
+                boxShadow: '0 4px 15px rgba(102,126,234,0.3)',
+                display: 'flex',
+                alignItems: 'center',
+                gap: 8
+              }}>
+                🔍 Property Search
+              </Link>
+            </nav>
         </div>
       </aside>
 
       {/* Main Content */}
-      <main style={{ flex: 1, padding: '40px 32px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 32 }}>
+      <main className="main-content" style={{ flex: 1, padding: '40px 32px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 32 }}>
         {/* Search Form */}
-        <div style={{ width: '100%', maxWidth: 1200, background: '#fff', borderRadius: 12, padding: 32, boxShadow: '0 4px 16px rgba(0,0,0,0.04)', color: '#000' }}>
+        <div style={{ width: '100%', maxWidth: 1200, background: 'rgba(255,255,255,0.95)', backdropFilter: 'blur(10px)', borderRadius: 16, padding: 32, boxShadow: '0 8px 30px rgba(0,0,0,0.12)', color: '#000', border: '1px solid rgba(255,255,255,0.2)' }}>
           <h2 style={{ fontSize: 24, fontWeight: 600, marginBottom: 24, textAlign: 'center' }}>Search Properties</h2>
           
           <form onSubmit={handleSearch} style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 20, alignItems: 'end' }}>
@@ -631,5 +769,6 @@ export default function PropertySearch() {
         )}
       </main>
     </div>
+    </>
   );
 }
