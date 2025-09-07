@@ -22,6 +22,23 @@ interface MarketData {
     price: number;
     rent: number;
   }>;
+  bestCities: {
+    [region: string]: Array<{
+      city: string;
+      yield: number;
+      avgPrice: number;
+      growthRate: number;
+    }>;
+  };
+  topProperties: Array<{
+    location: string;
+    propertyType: string;
+    yield: number;
+    avgPrice: number;
+    avgRent: number;
+    growthPotential: string;
+    reasonForPerformance: string;
+  }>;
   lastUpdated?: string;
 }
 
@@ -84,6 +101,99 @@ export default function Home() {
           { month: "Jul 2024", price: 285000, rent: 1185 },
           { month: "Sep 2024", price: 287000, rent: 1195 },
           { month: "Nov 2024", price: 289000, rent: 1205 }
+        ],
+        bestCities: {
+          "North East": [
+            { city: "Newcastle", yield: 7.2, avgPrice: 155000, growthRate: 4.1 },
+            { city: "Sunderland", yield: 8.1, avgPrice: 125000, growthRate: 3.8 },
+            { city: "Middlesbrough", yield: 9.2, avgPrice: 95000, growthRate: 2.9 }
+          ],
+          "North West": [
+            { city: "Manchester", yield: 6.8, avgPrice: 195000, growthRate: 5.2 },
+            { city: "Liverpool", yield: 7.1, avgPrice: 165000, growthRate: 4.8 },
+            { city: "Preston", yield: 6.2, avgPrice: 175000, growthRate: 3.9 }
+          ],
+          "Yorkshire": [
+            { city: "Leeds", yield: 6.1, avgPrice: 205000, growthRate: 4.5 },
+            { city: "Sheffield", yield: 6.8, avgPrice: 185000, growthRate: 4.2 },
+            { city: "Bradford", yield: 7.2, avgPrice: 155000, growthRate: 3.6 }
+          ],
+          "Midlands": [
+            { city: "Birmingham", yield: 5.8, avgPrice: 235000, growthRate: 4.8 },
+            { city: "Nottingham", yield: 6.1, avgPrice: 215000, growthRate: 4.1 },
+            { city: "Stoke-on-Trent", yield: 7.4, avgPrice: 145000, growthRate: 3.2 }
+          ],
+          "South West": [
+            { city: "Bristol", yield: 4.5, avgPrice: 385000, growthRate: 3.8 },
+            { city: "Plymouth", yield: 5.1, avgPrice: 275000, growthRate: 3.4 },
+            { city: "Exeter", yield: 4.2, avgPrice: 325000, growthRate: 3.1 }
+          ],
+          "South East": [
+            { city: "Reading", yield: 4.1, avgPrice: 425000, growthRate: 2.8 },
+            { city: "Southampton", yield: 4.8, avgPrice: 295000, growthRate: 3.2 },
+            { city: "Portsmouth", yield: 5.2, avgPrice: 265000, growthRate: 3.5 }
+          ],
+          "London": [
+            { city: "Croydon", yield: 3.8, avgPrice: 485000, growthRate: 2.1 },
+            { city: "Barking & Dagenham", yield: 4.2, avgPrice: 385000, growthRate: 2.8 },
+            { city: "Newham", yield: 3.9, avgPrice: 425000, growthRate: 2.5 }
+          ]
+        },
+        topProperties: [
+          {
+            location: "Liverpool, North West",
+            propertyType: "2-bed Terraced",
+            yield: 8.9,
+            avgPrice: 145000,
+            avgRent: 1075,
+            growthPotential: "High",
+            reasonForPerformance: "Strong rental demand from students and young professionals"
+          },
+          {
+            location: "Middlesbrough, North East",
+            propertyType: "3-bed Semi-detached",
+            yield: 9.6,
+            avgPrice: 115000,
+            avgRent: 920,
+            growthPotential: "Medium",
+            reasonForPerformance: "Affordable housing with steady rental market"
+          },
+          {
+            location: "Stoke-on-Trent, Midlands",
+            propertyType: "2-bed Flat",
+            yield: 8.2,
+            avgPrice: 85000,
+            avgRent: 580,
+            growthPotential: "Medium",
+            reasonForPerformance: "Low entry costs with reliable rental income"
+          },
+          {
+            location: "Bradford, Yorkshire",
+            propertyType: "3-bed Terraced",
+            yield: 7.8,
+            avgPrice: 125000,
+            avgRent: 810,
+            growthPotential: "High",
+            reasonForPerformance: "Regeneration projects boosting area appeal"
+          },
+          {
+            location: "Newcastle, North East",
+            propertyType: "1-bed Flat",
+            yield: 7.5,
+            avgPrice: 95000,
+            avgRent: 595,
+            growthPotential: "High",
+            reasonForPerformance: "City center location with strong transport links"
+          },
+          {
+            location: "Manchester, North West",
+            propertyType: "2-bed Apartment",
+            yield: 6.8,
+            avgPrice: 185000,
+            avgRent: 1050,
+            growthPotential: "Very High",
+            reasonForPerformance: "Tech hub growth driving rental demand"
+          }
         ]
       });
     } finally {
@@ -285,6 +395,119 @@ export default function Home() {
                     <div style={{ fontSize: 12, color: '#6b7280', marginBottom: 4 }}>{trend.month}</div>
                     <div style={{ fontSize: 16, fontWeight: 600, color: '#000', marginBottom: 2 }}>£{(trend.price / 1000).toFixed(0)}k</div>
                     <div style={{ fontSize: 12, color: '#059669' }}>£{trend.rent}/mo</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+            {/* Best Cities by Region */}
+            <div style={{ background: 'rgba(255,255,255,0.95)', backdropFilter: 'blur(10px)', borderRadius: 16, padding: 32, boxShadow: '0 8px 30px rgba(0,0,0,0.12)', border: '1px solid rgba(255,255,255,0.2)' }}>
+              <h2 style={{ margin: '0 0 24px 0', fontSize: 20, fontWeight: 600 }}>Best 3 Cities in Each Region</h2>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: 24 }}>
+                {Object.entries(marketData.bestCities).map(([region, cities]) => (
+                  <div key={region} style={{ background: 'rgba(102,126,234,0.05)', borderRadius: 12, padding: 20 }}>
+                    <h3 style={{ fontSize: 16, fontWeight: 600, margin: '0 0 16px 0', color: '#667eea' }}>{region}</h3>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                      {cities.map((city, index) => (
+                        <div key={city.city} style={{ 
+                          display: 'flex', 
+                          justifyContent: 'space-between', 
+                          alignItems: 'center',
+                          padding: '12px 16px',
+                          background: '#fff',
+                          borderRadius: 8,
+                          border: index === 0 ? '2px solid #fbbf24' : index === 1 ? '2px solid #9ca3af' : '2px solid #cd7c2f'
+                        }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                            <div style={{ 
+                              width: 24, 
+                              height: 24, 
+                              borderRadius: 12, 
+                              background: index === 0 ? '#fbbf24' : index === 1 ? '#9ca3af' : '#cd7c2f',
+                              display: 'flex', 
+                              alignItems: 'center', 
+                              justifyContent: 'center',
+                              color: '#fff',
+                              fontSize: 10,
+                              fontWeight: 600
+                            }}>
+                              {index + 1}
+                            </div>
+                            <div>
+                              <div style={{ fontSize: 14, fontWeight: 500 }}>{city.city}</div>
+                              <div style={{ fontSize: 11, color: '#6b7280' }}>£{city.avgPrice.toLocaleString()}</div>
+                            </div>
+                          </div>
+                          <div style={{ textAlign: 'right' }}>
+                            <div style={{ fontSize: 14, fontWeight: 600, color: '#059669' }}>{city.yield}%</div>
+                            <div style={{ fontSize: 11, color: '#6b7280' }}>+{city.growthRate}% growth</div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Top Performing Properties */}
+            <div style={{ background: 'rgba(255,255,255,0.95)', backdropFilter: 'blur(10px)', borderRadius: 16, padding: 32, boxShadow: '0 8px 30px rgba(0,0,0,0.12)', border: '1px solid rgba(255,255,255,0.2)' }}>
+              <h2 style={{ margin: '0 0 24px 0', fontSize: 20, fontWeight: 600 }}>Top Performing Properties & Rental Yields</h2>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))', gap: 20 }}>
+                {marketData.topProperties.map((property, index) => (
+                  <div key={`${property.location}-${index}`} style={{ 
+                    background: index < 3 ? 'linear-gradient(135deg, rgba(16,185,129,0.1) 0%, rgba(16,185,129,0.05) 100%)' : 'rgba(107,114,128,0.05)',
+                    borderRadius: 12, 
+                    padding: 20,
+                    border: index < 3 ? '1px solid rgba(16,185,129,0.2)' : '1px solid rgba(107,114,128,0.1)'
+                  }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 16 }}>
+                      <div>
+                        <h3 style={{ fontSize: 16, fontWeight: 600, margin: '0 0 4px 0' }}>{property.location}</h3>
+                        <p style={{ fontSize: 13, color: '#6b7280', margin: 0 }}>{property.propertyType}</p>
+                      </div>
+                      <div style={{ textAlign: 'right' }}>
+                        <div style={{ 
+                          fontSize: 18, 
+                          fontWeight: 700, 
+                          color: '#059669',
+                          background: 'rgba(16,185,129,0.1)',
+                          padding: '4px 8px',
+                          borderRadius: 6
+                        }}>
+                          {property.yield}%
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 16 }}>
+                      <div>
+                        <div style={{ fontSize: 12, color: '#6b7280', marginBottom: 2 }}>Average Price</div>
+                        <div style={{ fontSize: 15, fontWeight: 600 }}>£{property.avgPrice.toLocaleString()}</div>
+                      </div>
+                      <div>
+                        <div style={{ fontSize: 12, color: '#6b7280', marginBottom: 2 }}>Monthly Rent</div>
+                        <div style={{ fontSize: 15, fontWeight: 600 }}>£{property.avgRent}/mo</div>
+                      </div>
+                    </div>
+                    
+                    <div style={{ marginBottom: 12 }}>
+                      <span style={{ 
+                        fontSize: 11, 
+                        fontWeight: 500, 
+                        padding: '3px 8px', 
+                        borderRadius: 12,
+                        background: property.growthPotential === 'Very High' ? '#059669' : 
+                                   property.growthPotential === 'High' ? '#0ea5e9' :
+                                   property.growthPotential === 'Medium' ? '#f59e0b' : '#6b7280',
+                        color: '#fff'
+                      }}>
+                        {property.growthPotential} Growth Potential
+                      </span>
+                    </div>
+                    
+                    <p style={{ fontSize: 12, color: '#4b5563', margin: 0, lineHeight: 1.4 }}>
+                      {property.reasonForPerformance}
+                    </p>
                   </div>
                 ))}
               </div>
