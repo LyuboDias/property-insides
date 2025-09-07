@@ -5,6 +5,7 @@ import { useState } from "react";
 interface PropertyResult {
   id: string;
   address: string;
+  title: string; // Street and city (e.g., "Anlaby Street, Bradford")
   price: string;
   bedrooms: string;
   bathrooms: string;
@@ -31,6 +32,7 @@ export default function PropertySearch() {
   const [currentOffset, setCurrentOffset] = useState(0);
   const [selectedProperty, setSelectedProperty] = useState<PropertyResult | null>(null);
   const [showModal, setShowModal] = useState(false);
+  const [hasSearched, setHasSearched] = useState(false);
   const limit = 15;
 
   /**
@@ -57,6 +59,7 @@ export default function PropertySearch() {
       setError("");
       setResults([]);
       setCurrentOffset(0);
+      setHasSearched(true);
     } else {
       setLoadingMore(true);
     }
@@ -95,7 +98,7 @@ export default function PropertySearch() {
         // Client-side filtering for "Houses" option
         if (propertyType === 'Houses') {
           const houseTypes = ['Terraced', 'Semi Detached House', 'Detached House', 'Town House', 'Semi Detached', 'Detached'];
-          properties = properties.filter(property => {
+          properties = properties.filter((property: PropertyResult) => {
             const type = property.propertyType || '';
             return houseTypes.some(houseType => 
               type.toLowerCase().includes(houseType.toLowerCase()) ||
@@ -116,14 +119,19 @@ export default function PropertySearch() {
         
         setTotalFound(properties.length);
         setHasMore(data.hasMore || false);
+        
+        // Only stop loading for initial search when we have results or confirmation of no results
+        if (isInitialSearch) {
+          setLoading(false);
+        }
       } else {
         throw new Error(data.error || 'Search failed');
       }
     } catch (err: any) {
       setError(err.message || "Search failed. Please try again.");
+      setLoading(false); // Always stop loading on error
     } finally {
-      setLoading(false);
-      setLoadingMore(false);
+      setLoadingMore(false); // Always stop loading more
     }
   };
 
@@ -274,13 +282,29 @@ export default function PropertySearch() {
           {error && (
             <div style={{ color: 'red', marginTop: 12, textAlign: 'center' }}>{error}</div>
           )}
+
+          {/* No Properties Found Message */}
+          {hasSearched && !loading && results.length === 0 && !error && (
+            <div style={{ 
+              textAlign: 'center', 
+              marginTop: 24, 
+              padding: 20, 
+              background: '#f8fafc', 
+              borderRadius: 8,
+              color: '#666' 
+            }}>
+              <div style={{ fontSize: 16, marginBottom: 8 }}>🏠</div>
+              <div style={{ fontSize: 16, fontWeight: 500, marginBottom: 4 }}>No properties found</div>
+              <div style={{ fontSize: 14 }}>Try adjusting your search criteria or expanding the search radius</div>
+            </div>
+          )}
         </div>
 
         {/* Results */}
         {results.length > 0 && (
           <div style={{ width: '100%', maxWidth: 1200, color: '#000' }}>
             <h3 style={{ fontSize: 18, fontWeight: 600, marginBottom: 16 }}>
-              Found {totalFound} properties (showing {results.length} loaded)
+              Found {results.length} properties in {radius} miles of {location.charAt(0).toUpperCase() + location.slice(1)}{maxPrice ? ` for under £${parseInt(maxPrice).toLocaleString()}` : ''}
             </h3>
             
             {/* Properties Table */}
@@ -288,6 +312,7 @@ export default function PropertySearch() {
               <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                 <thead>
                   <tr style={{ background: '#f8fafc', borderBottom: '1px solid #e5e7eb' }}>
+                    <th style={tableHeaderStyle}>Property</th>
                     <th style={tableHeaderStyle}>Price</th>
                     <th style={tableHeaderStyle}>Bedrooms</th>
                     <th style={tableHeaderStyle}>Property Type</th>
@@ -310,6 +335,9 @@ export default function PropertySearch() {
                         e.currentTarget.style.backgroundColor = 'transparent';
                       }}
                     >
+                      <td style={tableCellStyle}>
+                        <div style={{ fontWeight: 500, color: '#0070f3' }}>{property.title || 'Property title not found'}</div>
+                      </td>
                       <td style={tableCellStyle}>
                         <div style={{ fontWeight: 600, fontSize: 16 }}>{property.price}</div>
                       </td>
@@ -400,6 +428,9 @@ export default function PropertySearch() {
               </h2>
               
               <div style={{ marginBottom: 24 }}>
+                <h3 style={{ fontSize: 18, fontWeight: 600, color: '#000', marginBottom: 8 }}>
+                  {selectedProperty.title || 'Property title not found'}
+                </h3>
                 <div style={{ fontSize: 20, fontWeight: 700, color: '#0070f3', marginBottom: 16 }}>
                   {selectedProperty.price}
                 </div>

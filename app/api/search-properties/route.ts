@@ -15,6 +15,7 @@ interface PropertySearchParams {
 interface PropertyResult {
   id: string;
   address: string;
+  title: string; // Street and city (e.g., "Anlaby Street, Bradford")
   price: string;
   bedrooms: string;
   bathrooms: string;
@@ -80,7 +81,7 @@ export async function POST(req: NextRequest) {
     console.log('HTML title check:', title);
     
     // Debug: If we get an error page, let's analyze it
-    if (title.includes("couldn't find") || title.includes("error") || html.length < 200000) {
+    if (title && (title.includes("couldn't find") || title.includes("error")) || html.length < 200000) {
       console.log('=== ERROR PAGE DETECTED ===');
       console.log('HTML preview (first 1000 chars):', html.substring(0, 1000));
       console.log('Search URL was:', searchUrl);
@@ -343,6 +344,63 @@ function extractPropertiesFromHtml(html: string, offset: number = 0, limit: numb
         '.propertyCard-priceValue span'
       ]) || extractPriceFromText($container.text());
       
+      // Extract property title/address using RightMove's specific structure
+      let title = extractText($container, [
+        // RightMove specific selectors for property title
+        'h1._2uQQ3SV0eMHL1P6t5ZDo2q', // Exact RightMove class for street address
+        'h1[itemprop="streetAddress"]', // Schema.org property
+        '.h3U6cGyEUf76tvCpYisik h1', // Parent container + h1
+        '[itemprop="address"] h1', // Address container with h1
+        'h1._2uQQ3SV0eMHL1P6t5ZDo2q', // RightMove title class
+        
+        // Fallback selectors
+        'h1',
+        'h2', 
+        '.property-title',
+        '.propertyCard-title',
+        '.propertyCard-address',
+        'a[href*="/properties/"]' // Property links often contain the title
+      ]);
+      
+      // If title is empty or looks like image count, try extracting from link text
+      if (!title || title.match(/^\d+\/\d+$/) || title.length < 5) {
+        const linkText = $container.find('a[href*="/properties/"]').first().text().trim();
+        if (linkText && !linkText.match(/^\d+\/\d+$/) && linkText.length > 5) {
+          title = linkText;
+        }
+        
+        // Additional fallback: try to find the address structure anywhere in the container
+        const addressContainer = $container.find('.h3U6cGyEUf76tvCpYisik, [itemprop="address"]').first();
+        if (addressContainer.length > 0) {
+          const addressTitle = addressContainer.find('h1, [itemprop="streetAddress"]').first().text().trim();
+          if (addressTitle && addressTitle.length > 5) {
+            title = addressTitle;
+          }
+        }
+        
+        // Manual search for RightMove address pattern in HTML
+        const containerHtml = $container.html() || '';
+        if (!title && containerHtml.includes('itemprop="address"')) {
+          const addressMatch = containerHtml.match(/<h1[^>]*itemprop="streetAddress"[^>]*>([^<]+)<\/h1>/i);
+          if (addressMatch && addressMatch[1]) {
+            title = addressMatch[1].trim();
+            console.log('Found address via HTML regex:', title);
+          }
+        }
+      }
+      
+      // Debug: check if we found RightMove specific elements
+      const rightMoveAddressElement = $container.find('.h3U6cGyEUf76tvCpYisik, [itemprop="address"]').first();
+      if (rightMoveAddressElement.length > 0) {
+        console.log('Found RightMove address element:', rightMoveAddressElement.html()?.substring(0, 200));
+        const streetAddress = rightMoveAddressElement.find('h1, [itemprop="streetAddress"]').first();
+        if (streetAddress.length > 0) {
+          console.log('Found street address:', streetAddress.text().trim());
+        }
+      }
+      
+      console.log('Final extracted title:', title);
+      
       let propertyType = extractText($container, [
         '[data-test="property-type"]',
         '.property-type',
@@ -386,11 +444,13 @@ function extractPropertiesFromHtml(html: string, offset: number = 0, limit: numb
       ]) || extractBathroomsFromText($container.text());
       
       // Basic extraction logging (reduced for speed)
-      if (index < 2) {
-        console.log(`Property ${index + 1} raw data:`, {
-          bedrooms: bedrooms,
-          propertyType: propertyType?.substring(0, 15) || 'N/A'
-        });
+      if (index < 3) {
+        console.log(`=== Property ${index + 1} Extraction ===`);
+        console.log('Container HTML preview:', $container.html()?.substring(0, 300));
+        console.log('Container classes:', $container.attr('class'));
+        console.log('Title extracted:', title);
+        console.log('Bedrooms extracted:', bedrooms);
+        console.log('Property type extracted:', propertyType?.substring(0, 15) || 'N/A');
       }
       
       // Extract property link
@@ -480,6 +540,7 @@ function extractPropertiesFromHtml(html: string, offset: number = 0, limit: numb
       const finalPrice = price || extractPriceFromText(fullText) || 'Price not found';
       const finalBedrooms = bedrooms || extractBedroomsFromText(fullText);
       const finalBathrooms = bathrooms || extractBathroomsFromText(fullText);
+      const finalTitle = title || extractTitleFromText(fullText) || 'Property title not found';
       
       // Extracted data (logging reduced for performance)
       
@@ -488,6 +549,7 @@ function extractPropertiesFromHtml(html: string, offset: number = 0, limit: numb
         const property = {
           id: `property-${index}-${Date.now()}`,
           address: cleanText(finalAddress),
+          title: cleanText(finalTitle),
           price: cleanText(finalPrice), 
           bedrooms: cleanText(finalBedrooms),
           bathrooms: cleanText(finalBathrooms),
@@ -537,6 +599,53 @@ function extractPropertiesFromHtml(html: string, offset: number = 0, limit: numb
   };
 }
 
+
+/**
+ * Extract property title (street + city) from raw text
+ */
+function extractTitleFromText(text: string): string {
+  console.log('Extracting title from raw text preview:', text.substring(0, 200));
+  
+  // Look for RightMove-specific patterns and UK address patterns
+  const addressPatterns = [
+    // RightMove specific: "Anlaby Street, Bradford" pattern
+    /([A-Za-z0-9\s]+(?:Street|Road|Avenue|Drive|Lane|Close|Way|Court|Place|Gardens|Crescent|Terrace|Square|Park),?\s*[A-Za-z\s]+)/i,
+    
+    // Property with number: "123 Main Street, City"
+    /(\d+\s+[A-Za-z\s]+(?:Street|Road|Avenue|Drive|Lane|Close|Way|Court|Place|Gardens|Crescent|Terrace),?\s*[A-Za-z\s]+)/i,
+    
+    // Any address before postcode
+    /([A-Za-z0-9\s,]+)(?:\s*[A-Z]{1,2}\d{1,2}[A-Z]?\s*\d[A-Z]{2})/i,
+    
+    // Named properties: "Rose House, Manchester"
+    /([A-Za-z0-9\s]+(?:House|Court|Gardens|Place|Manor|Lodge|Hall),?\s*[A-Za-z\s]+)/i,
+    
+    // Simple "Street, City" pattern
+    /([A-Za-z0-9\s]+,\s*[A-Za-z\s]+(?:Bradford|Leeds|Manchester|Birmingham|London|Liverpool|Sheffield|Bristol|Newcastle|Nottingham|Portsmouth|Southampton|Reading|Derby|Plymouth|Wolverhampton|Stoke|Preston|Brighton|Hull|Sunderland|Milton Keynes|Northampton|Norwich|Luton|Solihull|Islington|Croydon|Birkenhead|Blackpool|Oldham|Middlesbrough|Huddersfield|Oxford|Poole|Bolton|Bournemouth|Peterborough|Cambridge|Doncaster|York|Gloucester|Watford|Rotherham|Burnley|Hastings|Stevenage|Warrington|Stockport|Gateshead|Colchester|Carlisle|Chester|Shrewsbury|Wakefield|Blackburn|Grimsby|St Helens|Salford|Basildon|Redditch|Crawley|High Wycombe|Ipswich|Slough|Southend|Telford|Exeter|Cheltenham|Gloucester|Bath|Bradford|Halifax|Harrogate|Skipton|Keighley|Shipley))/i
+  ];
+  
+  for (let i = 0; i < addressPatterns.length; i++) {
+    const match = text.match(addressPatterns[i]);
+    if (match && match[1]) {
+      let title = match[1].trim();
+      
+      // Clean up the title
+      title = title.replace(/^[\d\/\|]+\s*/, ''); // Remove image counts at start
+      title = title.replace(/£[\d,]+/g, ''); // Remove prices
+      title = title.replace(/\s+/g, ' '); // Normalize spaces
+      title = title.replace(/,\s*$/, ''); // Remove trailing comma
+      title = title.replace(/^\s*,\s*/, ''); // Remove leading comma
+      
+      if (title.length >= 10 && !title.match(/^\d+\/\d+/) && title.includes(',')) {
+        console.log(`Found title using pattern ${i + 1}:`, title);
+        return title;
+      }
+    }
+  }
+  
+  console.log('No title pattern matched');
+  return '';
+}
 
 /**
  * Extract bedrooms from property text with enhanced patterns
@@ -777,13 +886,19 @@ function extractPriceFromText(text: string): string {
  */
 function extractText($element: any, selectors: string[]): string {
   for (const selector of selectors) {
-    const found = $element.find(selector).first();
-    if (found.length > 0) {
-      const text = found.text().trim();
-      if (text) {
-        console.log(`Found text "${text}" using selector "${selector}"`);
-        return text;
+    try {
+      const found = $element.find(selector).first();
+      if (found.length > 0) {
+        const text = found.text().trim();
+        if (text && text.length > 0 && !text.match(/^\d+\/\d+$/)) {
+          console.log(`Found text "${text}" using selector "${selector}"`);
+          return text;
+        }
       }
+    } catch (error) {
+      // Skip invalid selectors (e.g., complex RightMove class names)
+      console.log(`Skipping invalid selector: "${selector}"`);
+      continue;
     }
   }
   return '';
