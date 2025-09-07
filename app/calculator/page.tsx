@@ -228,7 +228,11 @@ export default function Calculator() {
       <aside style={{ width: 320, background: '#fff', borderRight: '1px solid #e5e7eb', minHeight: '100vh', padding: '40px 32px 32px 32px', display: 'flex', flexDirection: 'column', gap: 32, boxShadow: '2px 0 8px rgba(0,0,0,0.04)', color: '#000' }}>
         <div>
           <h1 style={{ fontSize: 22, fontWeight: 700, marginBottom: 16, color: '#000' }}>Buy-to-let deal analyser spreadsheet</h1>
-          <Link href="/" style={{ color: '#0070f3', fontWeight: 500, fontSize: 15, textDecoration: 'underline' }}>Home</Link>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            <Link href="/" style={{ color: '#0070f3', fontWeight: 500, fontSize: 15, textDecoration: 'underline' }}>Home</Link>
+            <Link href="/property-search" style={{ color: '#0070f3', fontWeight: 500, fontSize: 15, textDecoration: 'underline' }}>Property Search</Link>
+            <Link href="/checklist" style={{ color: '#0070f3', fontWeight: 500, fontSize: 15, textDecoration: 'underline' }}>Checklist</Link>
+          </div>
         </div>
         <div>
           <h2 style={{ fontSize: 16, fontWeight: 600, marginBottom: 8, color: '#000' }}>Instructions</h2>
