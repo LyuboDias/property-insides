@@ -212,15 +212,20 @@ export default function Calculator() {
     const capitalGain10Year = valueAfter10Years - purchaseNum;
     const capitalGain20Year = valueAfter20Years - purchaseNum;
     
-    // ROI Breakdown calculations
-    const yearlyCapitalGrowthROI = growthRate; // Annual growth rate as decimal
-    const yearlyRentROI = roi; // Annual rental ROI
-    const yearlyCombinedROI = yearlyCapitalGrowthROI + yearlyRentROI;
+    // ROI Breakdown calculations using correct formulas:
+    // Capital ROI = (Capital Gain / Cash Invested) × 100
+    // Rental ROI = (Net Annual Rental Profit × Years / Cash Invested) × 100
     
-    // 5-Year ROI breakdown
-    const fiveYearCapitalGrowthROI = purchaseNum ? (capitalGain5Year / purchaseNum) / 5 : 0; // Average annual capital growth
-    const fiveYearRentROI = totalInvestment ? ((annualNetProfit * 5) / totalInvestment) / 5 : 0; // Average annual rental ROI
-    const fiveYearCombinedROI = fiveYearCapitalGrowthROI + fiveYearRentROI;
+    // Yearly ROI breakdown
+    const yearlyCapitalGain = purchaseNum * growthRate; // Annual property appreciation in £
+    const yearlyCapitalROI = totalInvestment ? (yearlyCapitalGain / totalInvestment) : 0; // Annual capital ROI as decimal
+    const yearlyRentalROI = totalInvestment ? (annualNetProfit / totalInvestment) : 0; // Annual rental ROI as decimal
+    const yearlyCombinedROI = yearlyCapitalROI + yearlyRentalROI;
+    
+    // 5-Year ROI breakdown (total ROI over 5 years, not annualized)
+    const fiveYearCapitalROI = totalInvestment ? (capitalGain5Year / totalInvestment) : 0; // Total capital ROI over 5 years
+    const fiveYearRentalROI = totalInvestment ? ((annualNetProfit * 5) / totalInvestment) : 0; // Total rental ROI over 5 years
+    const fiveYearCombinedROI = fiveYearCapitalROI + fiveYearRentalROI;
     
     // Property Appreciation ROI: (Final Value - Initial Value) / Initial Value × 100
     // This shows the percentage growth in property value only
@@ -257,11 +262,11 @@ export default function Calculator() {
       capitalGain5Year,
       capitalGain10Year,
       capitalGain20Year,
-      yearlyCapitalGrowthROI,
-      yearlyRentROI,
+      yearlyCapitalROI,
+      yearlyRentalROI,
       yearlyCombinedROI,
-      fiveYearCapitalGrowthROI,
-      fiveYearRentROI,
+      fiveYearCapitalROI,
+      fiveYearRentalROI,
       fiveYearCombinedROI,
       yieldValue,
       grossYield,
@@ -337,11 +342,11 @@ export default function Calculator() {
       ['5-Year Property ROI (%)', results.roi5Year],
       ['10-Year Property ROI (%)', results.roi10Year],
       ['20-Year Property ROI (%)', results.roi20Year],
-      ['Yearly Capital Growth ROI (%)', results.yearlyCapitalGrowthROI * 100],
-      ['Yearly Rent ROI (%)', results.yearlyRentROI * 100],
+      ['Yearly Capital ROI (%)', results.yearlyCapitalROI * 100],
+      ['Yearly Rental ROI (%)', results.yearlyRentalROI * 100],
       ['Yearly Combined ROI (%)', results.yearlyCombinedROI * 100],
-      ['5-Year Capital Growth ROI (%)', results.fiveYearCapitalGrowthROI * 100],
-      ['5-Year Rent ROI (%)', results.fiveYearRentROI * 100],
+      ['5-Year Capital ROI (%)', results.fiveYearCapitalROI * 100],
+      ['5-Year Rental ROI (%)', results.fiveYearRentalROI * 100],
       ['5-Year Combined ROI (%)', results.fiveYearCombinedROI * 100],
     ];
     csv += rows.map(([k, v]) => `"${k}","${typeof v === 'number' ? v : ''}"`).join('\n');
@@ -784,7 +789,10 @@ export default function Calculator() {
                 </div>
               </div>
 
-              {/* ROI Breakdown Card */}
+              {/* ROI Breakdown Card - Uses correct investment ROI formulas */}
+              {/* Capital ROI = (Capital Gain / Cash Invested) × 100 */}
+              {/* Rental ROI = (Net Annual Rental Profit × Years / Cash Invested) × 100 */}
+              {/* Combined ROI = Capital ROI + Rental ROI */}
               <div style={{ background: '#fff', borderRadius: 16, padding: 24, boxShadow: '0 8px 32px rgba(0,0,0,0.08)', border: '1px solid rgba(0,0,0,0.05)' }}>
                 <h3 style={{ color: '#1a202c', fontSize: 18, fontWeight: 700, margin: 0, marginBottom: 20, display: 'flex', alignItems: 'center', gap: 8 }}>
                   💹 ROI Breakdown
@@ -797,15 +805,15 @@ export default function Calculator() {
                     </h4>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <span style={{ color: '#4a5568', fontWeight: 500 }}>Capital Growth ROI</span>
+                        <span style={{ color: '#4a5568', fontWeight: 500 }}>Capital ROI</span>
                         <span style={{ fontWeight: 600, color: '#3b82f6' }}>
-                          {toPercent(results.yearlyCapitalGrowthROI)}
+                          {toPercent(results.yearlyCapitalROI)}
                         </span>
                       </div>
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <span style={{ color: '#4a5568', fontWeight: 500 }}>Rent ROI</span>
+                        <span style={{ color: '#4a5568', fontWeight: 500 }}>Rental ROI</span>
                         <span style={{ fontWeight: 600, color: '#10b981' }}>
-                          {toPercent(results.yearlyRentROI)}
+                          {toPercent(results.yearlyRentalROI)}
                         </span>
                       </div>
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: 8, borderTop: '1px solid #e5e7eb' }}>
@@ -820,19 +828,19 @@ export default function Calculator() {
                   {/* 5-Year ROI Section */}
                   <div>
                     <h4 style={{ color: '#374151', fontSize: 16, fontWeight: 600, margin: 0, marginBottom: 12 }}>
-                      📈 5-Year Average ROI
+                      📈 5-Year Total ROI
                     </h4>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <span style={{ color: '#4a5568', fontWeight: 500 }}>Capital Growth ROI</span>
+                        <span style={{ color: '#4a5568', fontWeight: 500 }}>Capital ROI</span>
                         <span style={{ fontWeight: 600, color: '#3b82f6' }}>
-                          {toPercent(results.fiveYearCapitalGrowthROI)}
+                          {toPercent(results.fiveYearCapitalROI)}
                         </span>
                       </div>
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <span style={{ color: '#4a5568', fontWeight: 500 }}>Rent ROI</span>
+                        <span style={{ color: '#4a5568', fontWeight: 500 }}>Rental ROI</span>
                         <span style={{ fontWeight: 600, color: '#10b981' }}>
-                          {toPercent(results.fiveYearRentROI)}
+                          {toPercent(results.fiveYearRentalROI)}
                         </span>
                       </div>
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: 8, borderTop: '1px solid #e5e7eb' }}>
