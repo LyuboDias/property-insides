@@ -24,24 +24,46 @@ export default function PropertySearch() {
   const [propertyType, setPropertyType] = useState("");
   const [results, setResults] = useState<PropertyResult[]>([]);
   const [loading, setLoading] = useState(false);
+  const [loadingMore, setLoadingMore] = useState(false);
   const [error, setError] = useState("");
   const [totalFound, setTotalFound] = useState(0);
+  const [hasMore, setHasMore] = useState(false);
+  const [currentOffset, setCurrentOffset] = useState(0);
   const [selectedProperty, setSelectedProperty] = useState<PropertyResult | null>(null);
   const [showModal, setShowModal] = useState(false);
-  const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 10;
+  const limit = 15;
 
   /**
-   * Handles the property search form submission
+   * Handles the property search form submission (initial search)
    */
   const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
-    setError("");
-    setResults([]);
-    setCurrentPage(1);
+    await performSearch(true);
+  };
+
+  /**
+   * Handles loading more results
+   */
+  const handleLoadMore = async () => {
+    await performSearch(false);
+  };
+
+  /**
+   * Performs the actual search - either initial or load more
+   */
+  const performSearch = async (isInitialSearch: boolean) => {
+    if (isInitialSearch) {
+      setLoading(true);
+      setError("");
+      setResults([]);
+      setCurrentOffset(0);
+    } else {
+      setLoadingMore(true);
+    }
 
     try {
+      const offset = isInitialSearch ? 0 : currentOffset + limit;
+      
       const searchParams = {
         location,
         minPrice: minPrice || undefined,
@@ -49,6 +71,8 @@ export default function PropertySearch() {
         bedrooms: bedrooms || undefined,
         radius: radius || undefined,
         propertyType: propertyType || undefined,
+        offset,
+        limit,
       };
 
       const response = await fetch('/api/search-properties', {
@@ -66,8 +90,32 @@ export default function PropertySearch() {
       const data = await response.json();
       
       if (data.success) {
-        setResults(data.properties || []);
-        setTotalFound(data.totalFound || 0);
+        let properties = data.properties || [];
+        
+        // Client-side filtering for "Houses" option
+        if (propertyType === 'Houses') {
+          const houseTypes = ['Terraced', 'Semi Detached House', 'Detached House', 'Town House', 'Semi Detached', 'Detached'];
+          properties = properties.filter(property => {
+            const type = property.propertyType || '';
+            return houseTypes.some(houseType => 
+              type.toLowerCase().includes(houseType.toLowerCase()) ||
+              type.toLowerCase().includes('house') ||
+              type.toLowerCase().includes('terraced')
+            );
+          });
+          console.log(`Filtered to ${properties.length} house properties`);
+        }
+        
+        if (isInitialSearch) {
+          setResults(properties);
+          setCurrentOffset(0);
+        } else {
+          setResults(prev => [...prev, ...properties]);
+          setCurrentOffset(offset);
+        }
+        
+        setTotalFound(properties.length);
+        setHasMore(data.hasMore || false);
       } else {
         throw new Error(data.error || 'Search failed');
       }
@@ -75,6 +123,7 @@ export default function PropertySearch() {
       setError(err.message || "Search failed. Please try again.");
     } finally {
       setLoading(false);
+      setLoadingMore(false);
     }
   };
 
@@ -94,11 +143,7 @@ export default function PropertySearch() {
     setSelectedProperty(null);
   };
 
-  // Calculate pagination
-  const totalPages = Math.ceil(results.length / itemsPerPage);
-  const startIndex = (currentPage - 1) * itemsPerPage;
-  const endIndex = startIndex + itemsPerPage;
-  const currentResults = results.slice(startIndex, endIndex);
+  // No pagination needed - showing all loaded results
 
   return (
     <div style={{ minHeight: '100vh', background: '#f4f6fa', display: 'flex', color: '#000' }}>
@@ -186,6 +231,7 @@ export default function PropertySearch() {
               <label style={{ fontWeight: 500, marginBottom: 2, fontSize: 13, color: '#000' }}>Property Type</label>
               <select value={propertyType} onChange={e => setPropertyType(e.target.value)} style={inputStyle}>
                 <option value="">Any</option>
+                <option value="Houses">Houses</option>
                 <option value="Flat">Flat</option>
                 <option value="Terraced">Terraced</option>
                 <option value="Semi Detached House">Semi Detached House</option>
@@ -234,7 +280,7 @@ export default function PropertySearch() {
         {results.length > 0 && (
           <div style={{ width: '100%', maxWidth: 1200, color: '#000' }}>
             <h3 style={{ fontSize: 18, fontWeight: 600, marginBottom: 16 }}>
-              Found {totalFound} properties (showing {startIndex + 1}-{Math.min(endIndex, results.length)})
+              Found {totalFound} properties (showing {results.length} loaded)
             </h3>
             
             {/* Properties Table */}
@@ -248,7 +294,7 @@ export default function PropertySearch() {
                   </tr>
                 </thead>
                 <tbody>
-                  {currentResults.map((property) => (
+                  {results.map((property) => (
                     <tr 
                       key={property.id}
                       onClick={() => handlePropertyClick(property)}
@@ -279,37 +325,22 @@ export default function PropertySearch() {
               </table>
             </div>
 
-            {/* Pagination */}
-            {totalPages > 1 && (
-              <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 16 }}>
+            {/* Load More Button */}
+            {hasMore && (
+              <div style={{ display: 'flex', justifyContent: 'center', marginTop: 16 }}>
                 <button
-                  onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
-                  disabled={currentPage === 1}
+                  onClick={handleLoadMore}
+                  disabled={loadingMore}
                   style={{
                     ...buttonStyle,
-                    padding: '8px 16px',
-                    fontSize: 14,
-                    opacity: currentPage === 1 ? 0.5 : 1,
-                    cursor: currentPage === 1 ? 'not-allowed' : 'pointer'
+                    padding: '12px 24px',
+                    fontSize: 16,
+                    opacity: loadingMore ? 0.7 : 1,
+                    cursor: loadingMore ? 'not-allowed' : 'pointer',
+                    minWidth: 120
                   }}
                 >
-                  Previous
-                </button>
-                <span style={{ fontSize: 14, color: '#666' }}>
-                  Page {currentPage} of {totalPages}
-                </span>
-                <button
-                  onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
-                  disabled={currentPage === totalPages}
-                  style={{
-                    ...buttonStyle,
-                    padding: '8px 16px',
-                    fontSize: 14,
-                    opacity: currentPage === totalPages ? 0.5 : 1,
-                    cursor: currentPage === totalPages ? 'not-allowed' : 'pointer'
-                  }}
-                >
-                  Next
+                  {loadingMore ? "Loading..." : "Load More"}
                 </button>
               </div>
             )}
@@ -374,18 +405,9 @@ export default function PropertySearch() {
                 </div>
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 16, marginBottom: 24 }}>
+              <div style={{ marginBottom: 24 }}>
                 <div>
                   <strong>Bedrooms:</strong> {selectedProperty.bedrooms || 'N/A'}
-                </div>
-                <div>
-                  <strong>Bathrooms:</strong> {selectedProperty.bathrooms || 'N/A'}
-                </div>
-                <div>
-                  <strong>Property Type:</strong> {selectedProperty.propertyType || 'N/A'}
-                </div>
-                <div>
-                  <strong>Agent:</strong> {selectedProperty.agent || 'N/A'}
                 </div>
               </div>
 
@@ -398,9 +420,9 @@ export default function PropertySearch() {
 
               {selectedProperty.images.length > 0 && (
                 <div style={{ marginBottom: 24 }}>
-                  <h4 style={{ fontSize: 16, fontWeight: 600, marginBottom: 8, color: '#000' }}>Images</h4>
+                  <h4 style={{ fontSize: 16, fontWeight: 600, marginBottom: 8, color: '#000' }}>Images ({selectedProperty.images.length})</h4>
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: 12 }}>
-                    {selectedProperty.images.slice(0, 6).map((image, index) => (
+                    {selectedProperty.images.map((image, index) => (
                       <img
                         key={index}
                         src={image}
@@ -411,6 +433,10 @@ export default function PropertySearch() {
                           objectFit: 'cover',
                           borderRadius: 6,
                           border: '1px solid #e5e7eb'
+                        }}
+                        onError={(e) => {
+                          console.log('Failed to load image:', image);
+                          e.currentTarget.style.display = 'none';
                         }}
                       />
                     ))}

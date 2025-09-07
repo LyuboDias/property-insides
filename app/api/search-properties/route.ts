@@ -8,6 +8,8 @@ interface PropertySearchParams {
   bedrooms?: string;
   radius?: string;
   propertyType?: string;
+  offset?: number;
+  limit?: number;
 }
 
 interface PropertyResult {
@@ -74,16 +76,41 @@ export async function POST(req: NextRequest) {
 
     const html = await response.text();
     console.log('HTML length:', html.length);
-    console.log('HTML title check:', html.includes('<title>') ? html.match(/<title[^>]*>([^<]+)<\/title>/i)?.[1] : 'No title found');
+    const title = html.includes('<title>') ? html.match(/<title[^>]*>([^<]+)<\/title>/i)?.[1] : 'No title found';
+    console.log('HTML title check:', title);
     
-    const properties = extractPropertiesFromHtml(html);
+    // Debug: If we get an error page, let's analyze it
+    if (title.includes("couldn't find") || title.includes("error") || html.length < 200000) {
+      console.log('=== ERROR PAGE DETECTED ===');
+      console.log('HTML preview (first 1000 chars):', html.substring(0, 1000));
+      console.log('Search URL was:', searchUrl);
+      
+      // Try a simpler URL without property type filters
+      if (params.propertyType) {
+        console.log('Retrying without property type filter...');
+        const simpleParams = { ...params };
+        delete simpleParams.propertyType;
+        const simpleUrl = buildRightMoveFindUrl(simpleParams, locationData);
+        console.log('Trying simpler URL:', simpleUrl);
+      }
+    }
+    
+    // Get pagination parameters with defaults
+    const offset = params.offset || 0;
+    const limit = params.limit || 15;
+    
+    const result = extractPropertiesFromHtml(html, offset, limit);
     console.log('=== Extraction Complete ===');
-    console.log('Total properties found:', properties.length);
+    console.log('Total properties found:', result.totalFound);
+    console.log('Properties returned:', result.properties.length);
 
     return NextResponse.json({
       success: true,
-      properties,
-      totalFound: properties.length,
+      properties: result.properties,
+      totalFound: result.totalFound,
+      hasMore: (offset + limit) < result.totalFound,
+      currentOffset: offset,
+      limit: limit,
       searchParams: params,
       locationData,
       debugInfo: {
@@ -188,78 +215,51 @@ function buildRightMoveFindUrl(params: PropertySearchParams, locationData: {iden
     else searchParams.set('radius', '40.0');
   }
   
-  // Property type filter
+  // Property type filter  
   if (params.propertyType && params.propertyType !== '') {
-    // Map our property types to RightMove property type codes
-    const propertyTypeMap: { [key: string]: string } = {
-      'Flat': 'flats',
-      'Terraced': 'terraced-houses',
-      'Semi Detached House': 'semi-detached-houses', 
-      'Detached House': 'detached-houses',
-      'Bungalow': 'bungalows',
-      'Apartment': 'flats',
-      'Town House': 'terraced-houses',
-      'Maisonette': 'flats'
-    };
-    
-    const rightMovePropertyType = propertyTypeMap[params.propertyType];
-    if (rightMovePropertyType) {
-      searchParams.set('propertyTypes', rightMovePropertyType);
+    if (params.propertyType === 'Houses') {
+      // For "Houses", let's try without propertyTypes filter to get all house types
+      // RightMove might not support comma-separated values
+      console.log('Houses filter selected - searching all property types');
+    } else {
+      // Map individual property types to RightMove property type codes
+      const propertyTypeMap: { [key: string]: string } = {
+        'Flat': 'flats',
+        'Terraced': 'terraced-houses',
+        'Semi Detached House': 'semi-detached-houses', 
+        'Detached House': 'detached-houses',
+        'Bungalow': 'bungalows',
+        'Apartment': 'flats',
+        'Town House': 'terraced-houses',
+        'Maisonette': 'flats'
+      };
+      
+      const rightMovePropertyType = propertyTypeMap[params.propertyType];
+      if (rightMovePropertyType) {
+        searchParams.set('propertyTypes', rightMovePropertyType);
+        console.log('Property type filter:', rightMovePropertyType);
+      }
     }
   }
   
   // Include sold STC properties
   searchParams.set('_includeSSTC', 'on');
   
-  return `${baseUrl}?${searchParams.toString()}`;
+  const finalUrl = `${baseUrl}?${searchParams.toString()}`;
+  console.log('Final URL parameters:', Object.fromEntries(searchParams));
+  
+  return finalUrl;
 }
 
 /**
  * Extracts property listings from RightMove search results HTML
  */
-function extractPropertiesFromHtml(html: string): PropertyResult[] {
+function extractPropertiesFromHtml(html: string, offset: number = 0, limit: number = 15): { properties: PropertyResult[], totalFound: number } {
   const $ = cheerio.load(html);
   const properties: PropertyResult[] = [];
   
-  // Debug: log some key elements we can find
-  console.log('=== HTML Structure Analysis ===');
-  console.log('Title:', $('title').text());
-  console.log('Found divs:', $('div').length);
-  console.log('Found links:', $('a').length);
-  console.log('Property links found:', $('a[href*="/properties/"]').length);
-  
-  // Check for common RightMove class patterns
-  console.log('=== Class Pattern Analysis ===');
-  const commonClasses = ['propertyCard', 'l-searchResult', 'searchResult', 'property-result'];
-  commonClasses.forEach(className => {
-    const count = $(`.${className}`).length;
-    console.log(`Class "${className}": ${count} elements`);
-  });
-  
-  // Sample the first few property links to understand structure
-  console.log('=== Sample Property Links ===');
-  $('a[href*="/properties/"]').slice(0, 3).each((i, el) => {
-    const $link = $(el);
-    console.log(`Link ${i + 1}:`, $link.text().trim(), '|', $link.attr('href'));
-    console.log(`  - Parent element:`, $link.parent().prop('tagName'), $link.parent().attr('class'));
-    console.log(`  - Parent text:`, $link.parent().text().trim().substring(0, 100));
-  });
-  
-  // Look for h2 elements that might contain addresses
-  console.log('=== H2 Elements (potential addresses) ===');
-  $('h2').slice(0, 5).each((i, el) => {
-    console.log(`H2 ${i + 1}:`, $(el).text().trim());
-  });
-  
-  // Look for spans that might contain addresses
-  console.log('=== Address-like text patterns ===');
-  const addressPattern = /[A-Za-z]+\s+[A-Za-z,\s]+\s+(LS\d+|[A-Z]{1,2}\d{1,2}[A-Z]?\s*\d[A-Z]{2})/;
-  $('*').each((i, el) => {
-    const text = $(el).text().trim();
-    if (addressPattern.test(text) && text.length < 100) {
-      console.log('Found address pattern:', text);
-    }
-  });
+  // Quick structure check for debugging
+  console.log('HTML loaded, extracting properties...');
   
   // RightMove uses various selectors for property listings - updated for current structure
   const propertySelectors = [
@@ -282,42 +282,31 @@ function extractPropertiesFromHtml(html: string): PropertyResult[] {
   // Try different selectors until we find property listings
   for (const selector of propertySelectors) {
     propertyElements = $(selector);
-    console.log(`Trying selector "${selector}": found ${propertyElements.length} elements`);
-    if (propertyElements.length > 0) break;
+    if (propertyElements.length > 0) {
+      console.log(`Using selector "${selector}": found ${propertyElements.length} elements`);
+      break;
+    }
   }
   
   // If no specific property cards found, try finding any links with property URLs
   if (propertyElements.length === 0) {
-    console.log('No property cards found, trying property links...');
     propertyElements = $('a[href*="/properties/"]');
-    console.log(`Found ${propertyElements.length} property links`);
-    
-    // Additional debugging - look for common RightMove class patterns
-    console.log('Looking for other possible containers...');
-    console.log('Elements with "property" in class:', $('[class*="property"]').length);
-    console.log('Elements with "card" in class:', $('[class*="card"]').length);
-    console.log('Elements with "result" in class:', $('[class*="result"]').length);
-    
-    // Try to find any structured property containers
-    const possibleContainers = $('div').filter((i, el) => {
-      const className = $(el).attr('class') || '';
-      return className.includes('property') || className.includes('card') || className.includes('result');
-    });
-    
-    console.log(`Found ${possibleContainers.length} possible property containers`);
-    if (possibleContainers.length > 0) {
-      propertyElements = possibleContainers;
+    if (propertyElements.length === 0) {
+      // Try to find any structured property containers
+      const possibleContainers = $('div').filter((i, el) => {
+        const className = $(el).attr('class') || '';
+        return className.includes('property') || className.includes('card') || className.includes('result');
+      });
+      if (possibleContainers.length > 0) {
+        propertyElements = possibleContainers;
+      }
     }
+    console.log(`Fallback: found ${propertyElements.length} property elements`);
   }
   
   propertyElements.each((index, element) => {
     try {
       const $property = $(element);
-      
-      console.log(`\n=== Processing property ${index + 1} ===`);
-      console.log('Element tag:', $property.prop('tagName'));
-      console.log('Element classes:', $property.attr('class'));
-      console.log('Element HTML preview:', $property.html()?.substring(0, 300));
       
       // For property links, get the parent container
       let $container = $property;
@@ -368,14 +357,24 @@ function extractPropertiesFromHtml(html: string): PropertyResult[] {
         propertyType = extractPropertyTypeFromText($container.text());
       }
       
-      // Extract bedrooms info
-      const bedrooms = extractText($container, [
+      // Extract bedrooms info with enhanced selectors
+      let bedrooms = extractText($container, [
         '[data-test="beds"]',
         '.property-bedrooms',
         '.beds',
         '.bedroom',
-        '.propertyCard-details'
-      ]) || extractBedroomsFromText($container.text());
+        '.propertyCard-details',
+        // RightMove specific selectors - fixed CSS syntax
+        '[class*="bedroom"]',
+        '[class*="bed"]',
+        'span',
+        'div'
+      ]);
+      
+      // If not found through selectors, try text extraction
+      if (!bedrooms) {
+        bedrooms = extractBedroomsFromText($container.text());
+      }
       
       // Extract bathrooms info  
       const bathrooms = extractText($container, [
@@ -386,12 +385,13 @@ function extractPropertiesFromHtml(html: string): PropertyResult[] {
         '.propertyCard-details'
       ]) || extractBathroomsFromText($container.text());
       
-      console.log('Property details extraction:', {
-        propertyType,
-        bedrooms, 
-        bathrooms,
-        rawText: $container.text().substring(0, 100)
-      });
+      // Basic extraction logging (reduced for speed)
+      if (index < 2) {
+        console.log(`Property ${index + 1} raw data:`, {
+          bedrooms: bedrooms,
+          propertyType: propertyType?.substring(0, 15) || 'N/A'
+        });
+      }
       
       // Extract property link
       let link = '';
@@ -406,14 +406,41 @@ function extractPropertiesFromHtml(html: string): PropertyResult[] {
         link = `https://www.rightmove.co.uk${link}`;
       }
       
-      // Extract images
+      // Extract images with enhanced logic
       const images: string[] = [];
+      const imageUrls = new Set(); // Prevent duplicates
+      
       $container.find('img').each((_, img) => {
-        const src = $(img).attr('src');
-        if (src && (src.includes('rightmove') || src.includes('rightmove.co.uk'))) {
-          images.push(src);
+        const $img = $(img);
+        let src = $img.attr('src') || $img.attr('data-src') || $img.attr('data-lazy-src');
+        
+        // Skip very small images (likely icons)
+        const width = parseInt($img.attr('width') || '0');
+        const height = parseInt($img.attr('height') || '0');
+        if ((width > 0 && width < 50) || (height > 0 && height < 50)) {
+          return;
+        }
+        
+        if (src) {
+          // Make relative URLs absolute
+          if (src.startsWith('/')) {
+            src = `https://www.rightmove.co.uk${src}`;
+          } else if (src.startsWith('//')) {
+            src = `https:${src}`;
+          }
+          
+          // Accept images from various domains that RightMove uses
+          if (src.match(/\.(jpg|jpeg|png|webp)/i) && 
+              !src.includes('placeholder') && 
+              !src.includes('loading') && 
+              !imageUrls.has(src)) {
+            imageUrls.add(src);
+            images.push(src);
+          }
         }
       });
+      
+      // Images extracted (logging reduced for performance)
       
       // Extract agent info
       const agent = extractText($container, [
@@ -454,13 +481,7 @@ function extractPropertiesFromHtml(html: string): PropertyResult[] {
       const finalBedrooms = bedrooms || extractBedroomsFromText(fullText);
       const finalBathrooms = bathrooms || extractBathroomsFromText(fullText);
       
-      console.log('Extracted data:', { 
-        address: finalAddress, 
-        price: finalPrice, 
-        link, 
-        bedrooms: finalBedrooms, 
-        propertyType 
-      });
+      // Extracted data (logging reduced for performance)
       
       // Only add if we have essential data
       if (link || finalAddress !== 'Address not found') {
@@ -478,7 +499,6 @@ function extractPropertiesFromHtml(html: string): PropertyResult[] {
         };
         
         properties.push(property);
-        console.log('Added property:', property.address);
       } else {
         console.log('Skipped property - missing essential data');
       }
@@ -487,16 +507,85 @@ function extractPropertiesFromHtml(html: string): PropertyResult[] {
     }
   });
   
-  return properties;
+  console.log(`=== Pagination Info ===`);
+  console.log(`Total properties extracted: ${properties.length}`);
+  
+  // Sort properties by price in ascending order (lowest first)
+  properties.sort((a, b) => {
+    const priceA = parseFloat(a.price.replace(/[£,]/g, '')) || 0;
+    const priceB = parseFloat(b.price.replace(/[£,]/g, '')) || 0;
+    return priceA - priceB;
+  });
+  
+  console.log(`Properties sorted by price (ASC)`);
+  
+  // Apply pagination and filtering
+  const totalFound = properties.length;
+  const paginatedProperties = properties.slice(offset, offset + limit);
+  
+  console.log(`First few properties for debugging:`, paginatedProperties.slice(0, 3).map(p => ({
+    price: p.price,
+    propertyType: p.propertyType,
+    bedrooms: p.bedrooms
+  })));
+  
+  console.log(`Returning ${paginatedProperties.length} properties`);
+  
+  return {
+    properties: paginatedProperties,
+    totalFound: totalFound
+  };
 }
 
 
 /**
- * Extract bedrooms from property text
+ * Extract bedrooms from property text with enhanced patterns
  */
 function extractBedroomsFromText(text: string): string {
-  const bedroomMatch = text.match(/(\d+)\s*(?:bed|bedroom)/i);
-  return bedroomMatch ? bedroomMatch[1] : '';
+  // Multiple patterns to catch bedroom information
+  const patterns = [
+    // Standard patterns: "2 bed", "2 bedroom", "2 bedrooms"
+    /(\d+)\s*(?:bed|bedroom|bedrooms?)(?:\s|$|,)/i,
+    
+    // RightMove specific patterns
+    /BEDROOMS?\s*(\d+)/i,           // "BEDROOMS 2"
+    /(\d+)\s*BEDROOMS?/i,           // "2 BEDROOMS"
+    
+    // In text descriptions: "Two bedroom", "Three bed" etc.
+    /(one|two|three|four|five|six|seven|eight|nine|ten)\s*(?:bed|bedroom)/i,
+    
+    // Pattern like "Town House21" where 2 is bedrooms and 1 is bathroom
+    /(?:House|Flat|Apartment)(\d)(\d)/i,
+    
+    // Just numbers followed by bedroom-related text
+    /(\d+)\s*br\b/i,                // "2 br"
+    /(\d+)\s*bdrm/i,                // "2 bdrm"
+  ];
+  
+  for (let i = 0; i < patterns.length; i++) {
+    const match = text.match(patterns[i]);
+    if (match && match[1]) {
+      let result = match[1];
+      
+      // Convert word numbers to digits
+      const wordToNumber: { [key: string]: string } = {
+        'one': '1', 'two': '2', 'three': '3', 'four': '4', 'five': '5',
+        'six': '6', 'seven': '7', 'eight': '8', 'nine': '9', 'ten': '10'
+      };
+      
+      if (wordToNumber[result.toLowerCase()]) {
+        result = wordToNumber[result.toLowerCase()];
+      }
+      
+      // Validate result is a reasonable number
+      const num = parseInt(result);
+      if (num >= 1 && num <= 10) {
+        return result;
+      }
+    }
+  }
+  
+  return '';
 }
 
 /**
