@@ -195,16 +195,6 @@ export default function Calculator() {
     const valueAfter5Years = currentValue * Math.pow(1 + growthRate, 5);
     const valueAfter10Years = currentValue * Math.pow(1 + growthRate, 10);
     const valueAfter20Years = currentValue * Math.pow(1 + growthRate, 20);
-    
-    console.log('Debug Future Projections:', {
-      currentValue,
-      growthRate,
-      growth,
-      valueAfter2Years,
-      valueAfter5Years,
-      valueAfter10Years,
-      valueAfter20Years
-    });
     const annualRent = rentNum * 12;
     const annualExpenses =
       (mortgageInterest * 12) +
@@ -229,18 +219,6 @@ export default function Calculator() {
     const roi5Year = totalInvestment ? (totalProfit5Years / totalInvestment) * 100 : 0;
     const roi10Year = totalInvestment ? (totalProfit10Years / totalInvestment) * 100 : 0;
     const roi20Year = totalInvestment ? (totalProfit20Years / totalInvestment) * 100 : 0;
-    
-    console.log('Debug Capital Gains & ROI:', {
-      purchaseNum,
-      capitalGain5Year,
-      capitalGain10Year, 
-      capitalGain20Year,
-      annualNetProfit,
-      totalInvestment,
-      roi5Year,
-      roi10Year,
-      roi20Year
-    });
 
     // const roi = totalInvestment ? (annualNetProfit / totalInvestment) * 100 : 0;
     const yieldValue = purchaseNum ? annualRent / purchaseNum : 0;
@@ -248,7 +226,7 @@ export default function Calculator() {
     const grossYield = purchaseNum ? (annualRent / purchaseNum) * 100 : 0;
     // NET YIELD: ((Annual Rental Income - Annual Expenses) / Property Value) * 100
     const netYield = purchaseNum ? ((annualRent - annualExpenses) / purchaseNum) * 100 : 0;
-    setResults({
+    const resultsData = {
       stampDuty,
       deposit,
       repair: repairNum,
@@ -292,7 +270,9 @@ export default function Calculator() {
       annualNetProfit,
       monthlyNetProfit,
       monthlyExpenses,
-    });
+    };
+    
+    setResults(resultsData);
   };
 
   // Download results as CSV
