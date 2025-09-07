@@ -337,6 +337,49 @@ export default function Calculator() {
     return priceData[bedrooms] || priceData[2]; // Default to 2 bedrooms if not found
   };
 
+  // Average rental prices by region and number of bedrooms (per month)
+  const getAverageRentals = (bedrooms: number) => {
+    const rentalData: { [key: number]: { [region: string]: number } } = {
+      1: {
+        "North East": 450,
+        "Midlands": 650,
+        "North West": 550,
+        "South East": 950,
+        "London": 1450
+      },
+      2: {
+        "North East": 650,
+        "Midlands": 850,
+        "North West": 750,
+        "South East": 1250,
+        "London": 1950
+      },
+      3: {
+        "North East": 850,
+        "Midlands": 1050,
+        "North West": 950,
+        "South East": 1650,
+        "London": 2650
+      },
+      4: {
+        "North East": 1150,
+        "Midlands": 1350,
+        "North West": 1250,
+        "South East": 2150,
+        "London": 3450
+      },
+      5: {
+        "North East": 1450,
+        "Midlands": 1650,
+        "North West": 1550,
+        "South East": 2750,
+        "London": 4250
+      }
+    };
+
+    return rentalData[bedrooms] || rentalData[2]; // Default to 2 bedrooms if not found
+  };
+
   // Download results as CSV
   const handleDownload = () => {
     if (!results) return;
@@ -743,7 +786,7 @@ export default function Calculator() {
                     </div>
                   </div>
                 </div>
-                <input type="number" value={purchase} onChange={e => setPurchase(e.target.value)} style={inputStyle} required />
+                <input type="number" value={purchase} onChange={e => setPurchase(e.target.value)} style={inputStyle} placeholder="e.g. 250000" required />
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                 <label style={{ fontWeight: 500, marginBottom: 2, fontSize: 13, color: '#000' }}>Cash available</label>
@@ -751,7 +794,7 @@ export default function Calculator() {
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                 <label style={{ fontWeight: 500, marginBottom: 2, fontSize: 13, color: '#000' }}>Repair cost</label>
-                <input type="number" value={repair} onChange={e => setRepair(e.target.value)} style={inputStyle} />
+                <input type="number" value={repair} onChange={e => setRepair(e.target.value)} style={inputStyle} placeholder="e.g. 8000 (painting, kitchen, bathroom)" />
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                 <label style={{ fontWeight: 500, marginBottom: 2, fontSize: 13, color: '#000' }}>Legal fees</label>
@@ -787,8 +830,78 @@ export default function Calculator() {
             </h3>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 20 }}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                <label style={{ fontWeight: 500, marginBottom: 2, fontSize: 13, color: '#000' }}>Forecast rent (per month) <span style={{ color: 'red' }}>*</span></label>
-                <input type="number" value={rent} onChange={e => setRent(e.target.value)} style={inputStyle} required />
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <label style={{ fontWeight: 500, marginBottom: 2, fontSize: 13, color: '#000' }}>Forecast rent (per month) <span style={{ color: 'red' }}>*</span></label>
+                  <div className="tooltip-container" style={{ 
+                    position: 'relative', 
+                    display: 'inline-block',
+                    cursor: 'help'
+                  }}>
+                    <span className="tooltip-icon" style={{
+                      fontSize: 12,
+                      color: '#667eea',
+                      fontWeight: 600,
+                      backgroundColor: 'rgba(102,126,234,0.1)',
+                      borderRadius: '50%',
+                      width: 16,
+                      height: 16,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      border: '1px solid rgba(102,126,234,0.2)',
+                      transition: 'all 0.2s ease'
+                    }}>ℹ</span>
+                    <div style={{
+                      position: 'absolute',
+                      bottom: '125%',
+                      left: '50%',
+                      transform: 'translateX(-50%)',
+                      backgroundColor: '#1a202c',
+                      color: 'white',
+                      padding: '12px 16px',
+                      borderRadius: 8,
+                      fontSize: 11,
+                      fontWeight: 500,
+                      whiteSpace: 'normal',
+                      opacity: 0,
+                      visibility: 'hidden',
+                      transition: 'opacity 0.2s, visibility 0.2s',
+                      zIndex: 1000,
+                      boxShadow: '0 8px 25px rgba(0,0,0,0.15)',
+                      pointerEvents: 'none',
+                      minWidth: 200
+                    }}
+                    className="tooltip"
+                    >
+                      <div style={{ marginBottom: 8, fontWeight: 600, color: '#667eea', fontSize: 12 }}>
+                        Average {numBeds || 2}-bed rent/month:
+                      </div>
+                      {Object.entries(getAverageRentals(Number(numBeds) || 2)).map(([region, price]) => (
+                        <div key={region} style={{ 
+                          display: 'flex', 
+                          justifyContent: 'space-between',
+                          marginBottom: 3,
+                          gap: 12
+                        }}>
+                          <span style={{ color: '#cbd5e0' }}>{region}:</span>
+                          <span style={{ fontWeight: 600, color: '#48bb78' }}>£{price.toLocaleString()}</span>
+                        </div>
+                      ))}
+                      <div style={{
+                        position: 'absolute',
+                        top: '100%',
+                        left: '50%',
+                        transform: 'translateX(-50%)',
+                        width: 0,
+                        height: 0,
+                        borderLeft: '6px solid transparent',
+                        borderRight: '6px solid transparent',
+                        borderTop: '6px solid #1a202c'
+                      }}></div>
+                    </div>
+                  </div>
+                </div>
+                <input type="number" value={rent} onChange={e => setRent(e.target.value)} style={inputStyle} placeholder="e.g. 1200" required />
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                 <label style={{ fontWeight: 500, marginBottom: 2, fontSize: 13, color: '#000' }}>Agency fee (% of rent per month)</label>
@@ -796,7 +909,7 @@ export default function Calculator() {
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                 <label style={{ fontWeight: 500, marginBottom: 2, fontSize: 13, color: '#000' }}>Additional monthly fees</label>
-                <input type="number" value={additionalFees} onChange={e => setAdditionalFees(e.target.value)} style={inputStyle} />
+                <input type="number" value={additionalFees} onChange={e => setAdditionalFees(e.target.value)} style={inputStyle} placeholder="eg 10% of rent" />
               </div>
             </div>
           </div>
