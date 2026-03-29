@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { useAuth } from '@/contexts/AuthContext'
+// import { useAuth } from '@/contexts/AuthContext'
 
 interface NavigationBarProps {
   currentPage: string
@@ -11,19 +11,13 @@ interface NavigationBarProps {
 
 export default function NavigationBar({ currentPage, pageIcon }: NavigationBarProps) {
   const pathname = usePathname()
-  const { user, signOut } = useAuth()
-
-  const handleLogout = async () => {
-    try {
-      await signOut()
-    } catch (error) {
-      console.error('Error signing out:', error)
-    }
-  }
+  // const { user, signOut } = useAuth()
+  // const handleLogout = async () => { await signOut() }
 
   const navItems = [
     { href: '/', label: 'Home', icon: '🏠' },
     { href: '/calculator', label: 'Calculator', icon: '🧮' },
+    { href: '/bridging-calculator', label: 'Bridging Calculator', icon: '🌉' },
     { href: '/property-search', label: 'Property Search', icon: '🔍' },
     { href: '/developer-tools', label: 'Developer Tools', icon: '🏗️' },
     { href: '/checklist', label: 'Checklist', icon: '📋' }
@@ -74,23 +68,9 @@ export default function NavigationBar({ currentPage, pageIcon }: NavigationBarPr
                 </Link>
               ))}
             </div>
-            <button
-              onClick={handleLogout}
-              style={{
-                color: '#dc2626',
-                fontSize: 11,
-                fontWeight: 600,
-                padding: '6px 10px',
-                borderRadius: 12,
-                background: 'rgba(220, 38, 38, 0.1)',
-                border: 'none',
-                cursor: 'pointer',
-                transition: 'all 0.2s ease'
-              }}
-              title="Sign Out"
-            >
-              🚪
-            </button>
+            {/* Sign out (disabled while auth gate is off)
+            <button onClick={handleLogout} ...>🚪</button>
+            */}
           </div>
         </div>
       </div>
@@ -126,16 +106,9 @@ export default function NavigationBar({ currentPage, pageIcon }: NavigationBarPr
         </div>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-          {/* User Info */}
-          <div style={{ 
-            padding: '12px 16px', 
-            background: 'rgba(102,126,234,0.1)',
-            borderRadius: 12,
-            marginBottom: 8
-          }}>
-            <div style={{ fontSize: 12, color: '#6b7280', marginBottom: 2 }}>Signed in as:</div>
-            <div style={{ fontSize: 14, fontWeight: 600, color: '#374151' }}>{user?.email}</div>
-          </div>
+          {/* User info (disabled while auth gate is off)
+          <div>Signed in as: {user?.email}</div>
+          */}
 
           <nav style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
             {navItems.map(item => (
@@ -159,29 +132,9 @@ export default function NavigationBar({ currentPage, pageIcon }: NavigationBarPr
                 {item.label}
               </Link>
             ))}
-            
-            {/* Logout Button */}
-            <button
-              onClick={handleLogout}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: 12,
-                padding: '12px 16px',
-                borderRadius: 12,
-                border: 'none',
-                cursor: 'pointer',
-                color: '#dc2626',
-                background: 'rgba(220, 38, 38, 0.1)',
-                fontWeight: 500,
-                fontSize: 14,
-                transition: 'all 0.2s ease',
-                marginTop: 16
-              }}
-            >
-              <span style={{ fontSize: 16 }}>🚪</span>
-              Sign Out
-            </button>
+            {/* Sign out (disabled while auth gate is off)
+            <button onClick={handleLogout}>Sign Out</button>
+            */}
           </nav>
         </div>
 

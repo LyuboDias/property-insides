@@ -15,10 +15,10 @@ export async function GET(request: NextRequest) {
       permitedDevelopment,
       localPlanningPolicies
     ] = await Promise.all([
-      scrapePlanningSuccessRates(councilName),
-      scrapeProcessingTimes(councilName),
+      scrapePlanningSuccessRates(councilName ?? undefined),
+      scrapeProcessingTimes(councilName ?? undefined),
       scrapePermittedDevelopmentRights(postcode),
-      scrapePlanningPolicies(councilName)
+      scrapePlanningPolicies(councilName ?? undefined)
     ]);
 
     const planningData = {

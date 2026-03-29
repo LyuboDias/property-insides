@@ -6,11 +6,13 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "create-user": "node scripts/create-supabase-user.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.57.2",
     "cheerio": "^1.0.0",
+    "mongodb": "^6.21.0",
     "next": "15.3.2",
     "react": "^19.0.0",
     "react-dom": "^19.0.0"
@@ -19,6 +21,7 @@
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "dotenv": "^17.3.1",
     "postcss": "^8.5.6",
     "typescript": "^5"
   }
