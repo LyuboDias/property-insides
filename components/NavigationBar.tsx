@@ -2,7 +2,6 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-// import { useAuth } from '@/contexts/AuthContext'
 
 interface NavigationBarProps {
   currentPage: string
@@ -11,8 +10,6 @@ interface NavigationBarProps {
 
 export default function NavigationBar({ currentPage, pageIcon }: NavigationBarProps) {
   const pathname = usePathname()
-  // const { user, signOut } = useAuth()
-  // const handleLogout = async () => { await signOut() }
 
   const navItems = [
     { href: '/', label: 'Home', icon: '🏠' },
@@ -68,9 +65,6 @@ export default function NavigationBar({ currentPage, pageIcon }: NavigationBarPr
                 </Link>
               ))}
             </div>
-            {/* Sign out (disabled while auth gate is off)
-            <button onClick={handleLogout} ...>🚪</button>
-            */}
           </div>
         </div>
       </div>
@@ -106,10 +100,6 @@ export default function NavigationBar({ currentPage, pageIcon }: NavigationBarPr
         </div>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-          {/* User info (disabled while auth gate is off)
-          <div>Signed in as: {user?.email}</div>
-          */}
-
           <nav style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
             {navItems.map(item => (
               <Link key={item.href} href={item.href} style={{
@@ -132,9 +122,6 @@ export default function NavigationBar({ currentPage, pageIcon }: NavigationBarPr
                 {item.label}
               </Link>
             ))}
-            {/* Sign out (disabled while auth gate is off)
-            <button onClick={handleLogout}>Sign Out</button>
-            */}
           </nav>
         </div>
 
