@@ -17,7 +17,7 @@ export async function GET(request: NextRequest) {
     ] = await Promise.all([
       scrapePlanningSuccessRates(councilName ?? undefined),
       scrapeProcessingTimes(councilName ?? undefined),
-      scrapePermittedDevelopmentRights(postcode),
+      scrapePermittedDevelopmentRights(postcode ?? undefined),
       scrapePlanningPolicies(councilName ?? undefined)
     ]);
 
@@ -26,7 +26,7 @@ export async function GET(request: NextRequest) {
       location: {
         postcode: postcode || "General UK",
         council: councilName || "Multiple Councils",
-        region: getRegionFromPostcode(postcode)
+        region: getRegionFromPostcode(postcode ?? undefined)
       },
       successRates: planningSuccess,
       processingTimes: processingTimes,
